@@ -2,101 +2,151 @@
 
 ## Overview
 
-Fracto uses JSON Web Token authentication to provide stateless and secure access to API endpoints from the Angular frontend.
+Fracto uses JWT bearer authentication to protect user and admin API operations while keeping the frontend session flow simple. The Angular application stores the authenticated session on the client, attaches the token through an HTTP interceptor, and relies on route guards to control navigation.
+
+## Current Authentication Architecture
+
+```mermaid
+flowchart LR
+    UI[Angular Auth Page] --> AS[AuthService]
+    AS --> API[POST /api/auth/login or register]
+    API --> DB[Users table validation]
+    DB --> JWT[JWT token generation]
+    JWT --> API
+    API --> AS
+    AS --> LS[localStorage session]
+    LS --> INT[HTTP interceptor]
+    INT --> SEC[Protected API request]
+    SEC --> MW[JWT bearer middleware]
+    MW --> AUTH[Authorize attributes and role checks]
+```
 
 ## End-to-End Flow
 
-### 1. User Login
+### 1. Login or Registration Request
 
-1. The user enters email and password on the Angular login page.
-2. The frontend sends the credentials to `POST /api/auth/login`.
-3. The backend validates the user against the `Users` table.
-4. If the credentials are valid, the API generates a JWT token.
+1. The user submits the login or registration form from the Angular auth page.
+2. The frontend calls either `POST /api/auth/login` or `POST /api/auth/register`.
+3. The backend validates the request, checks the user record, and either creates or authenticates the account.
 
 ### 2. Token Generation
 
-The backend creates a token with claims such as:
+After successful authentication, the backend generates a signed JWT using the configured issuer, audience, secret key, and expiry duration.
 
-- `sub`: user id
-- `email`: user email
-- `role`: `User` or `Admin`
-- `jti`: unique token identifier
+The token currently includes claims based on .NET `ClaimTypes`:
 
-The token is signed using a secure secret key from configuration and includes an expiration time.
+- `NameIdentifier`: user id
+- `Name`: full name
+- `Email`: user email
+- `Role`: `User` or `Admin`
 
-### 3. Token Delivery and Storage
+### 3. Session Payload Returned to the Frontend
 
-1. The API returns the JWT token to the Angular application.
-2. The frontend stores the token in a secure client-side store such as memory or session storage.
-3. An Angular HTTP interceptor automatically adds the token to outgoing protected requests.
+The API returns more than just a token. It returns a complete authenticated session payload:
 
-Example header:
-
-```text
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```json
+{
+  "message": "Login successful.",
+  "token": "<jwt-token>",
+  "expiresAtUtc": "2026-03-20T15:30:00Z",
+  "user": {
+    "userId": 2,
+    "fullName": "Harsh Raj",
+    "email": "user@fracto.com",
+    "role": "User",
+    "city": "Bengaluru",
+    "profileImagePath": null
+  }
+}
 ```
 
-### 4. Token Validation
+### 4. Client-Side Session Storage
 
-For every protected request:
-
-1. The ASP.NET Core JWT bearer middleware reads the `Authorization` header.
-2. The middleware validates the token signature, issuer, audience, and expiration.
-3. If validation succeeds, the `HttpContext.User` principal is populated with claims.
-4. Controllers and services can access the current user identity and role from claims.
-
-### 5. Authorization Middleware
-
-After authentication, authorization rules are enforced:
-
-- `[Authorize]` allows only authenticated users.
-- `[Authorize(Roles = "Admin")]` allows only admin users.
-- Business logic further verifies resource ownership, such as ensuring a user can only cancel their own appointment.
-
-## Textual Flow Diagram
+The Angular frontend stores the full session payload in `localStorage` under:
 
 ```text
-[ Angular Login Form ]
-          |
-          v
-POST /api/auth/login
-          |
-          v
-[ AuthController ]
-          |
-          v
-[ AuthService validates user ]
-          |
-          v
-[ JWT Token Generator ]
-          |
-          v
-Token returned to Angular
-          |
-          v
-[ Angular Interceptor adds Bearer token ]
-          |
-          v
-Protected API request
-          |
-          v
-[ JWT Middleware validates token ]
-          |
-          v
-[ Authorization attributes enforce access ]
+fracto.auth.session
 ```
 
-## Security Practices
+This allows the application to restore the session after a browser refresh.
 
-- Store only password hashes, never plain-text passwords.
-- Use strong signing keys and keep them outside source control.
-- Enforce token expiration and optional refresh token flow for longer sessions.
-- Use HTTPS so tokens are not transmitted over insecure channels.
-- Limit token content to required claims only.
+### 5. Attaching the Token to API Requests
 
-## Recommended ASP.NET Core Configuration Areas
+The Angular auth interceptor reads the token from `AuthService` and adds this header automatically:
 
-- `JwtSettings` class in `Configuration/`
-- `builder.Services.AddAuthentication().AddJwtBearer(...)`
-- `builder.Services.AddAuthorization()`
-- `UseAuthentication()` before `UseAuthorization()` in the middleware pipeline
+```text
+Authorization: Bearer <jwt-token>
+```
+
+This applies to protected API requests after login or registration.
+
+### 6. Backend Token Validation
+
+For protected requests:
+
+1. ASP.NET Core JWT bearer middleware reads the `Authorization` header.
+2. The token signature, issuer, audience, and expiration are validated.
+3. If valid, the request principal is populated with claims.
+4. Controllers and helpers resolve the current user id and role from those claims.
+
+### 7. Route Protection in the Frontend
+
+Fracto currently uses two Angular route guards:
+
+- `authGuard`: redirects unauthenticated users to `/login`
+- `adminGuard`: redirects unauthenticated users to `/login` and non-admin users to `/doctors`
+
+### 8. Authorization in the Backend
+
+The API applies authorization in two layers:
+
+- controller attributes such as `[Authorize]` and `[Authorize(Roles = "Admin")]`
+- business-rule checks inside services, for example ensuring users can only cancel or rate their own appointments
+
+## Authentication Sequence
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant UI as Angular App
+    participant API as AuthController
+    participant S as AuthService
+    participant J as JwtTokenGenerator
+    participant LS as localStorage
+
+    U->>UI: Submit login form
+    UI->>API: POST /api/auth/login
+    API->>S: Validate credentials
+    S->>J: Generate JWT
+    J-->>S: Token + expiry
+    S-->>API: Auth response DTO
+    API-->>UI: Session payload
+    UI->>LS: Store fracto.auth.session
+    UI->>UI: Navigate by role
+```
+
+## Security Notes
+
+- passwords are hashed with BCrypt before being stored
+- tokens are signed with a symmetric secret key from configuration
+- token expiry is enforced with zero clock skew
+- admin-only endpoints depend on role claims
+- CORS is restricted to configured frontend origins
+- centralized exception handling avoids leaking internal stack traces in API responses
+
+## Middleware and Configuration Points
+
+Important implementation areas in the codebase:
+
+- `Configuration/JwtSettings.cs`
+- `Helpers/JwtTokenGenerator.cs`
+- `Program.cs` authentication and authorization setup
+- `core/services/auth.service.ts`
+- `core/interceptors/auth.interceptor.ts`
+- `core/guards/auth.guard.ts`
+- `core/guards/admin.guard.ts`
+
+## Related Documentation
+
+- [REST_API_Design.md](./REST_API_Design.md)
+- [Fracto_Project_Report.md](./Fracto_Project_Report.md)

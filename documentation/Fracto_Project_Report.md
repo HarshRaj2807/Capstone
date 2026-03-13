@@ -1,517 +1,288 @@
-# Fracto - Online Doctor Appointment Booking System
+# Fracto Project Report
 
-## Title Page
+## Online Doctor Appointment Booking System
 
-**Project Title:** Fracto - Online Doctor Appointment Booking System  
-**Name:** Harsh Raj  
-**Date:** 20/03/2026
+**Author:** Harsh Raj  
+**Updated:** March 13, 2026  
+**Project Type:** Full-stack capstone application
 
----
+## Abstract
 
-## Table of Contents
+Fracto is a role-based doctor appointment booking platform built with Angular and ASP.NET Core Web API. The system allows patients to register, authenticate, discover doctors by city, specialization, and rating, select an available slot, complete a checkout-style payment step, and manage their appointments from a single interface. Administrators can manage doctors, monitor appointment activity, and control user access from a dedicated admin console.
 
-1. [Problem Definition](#problem-definition)
-2. [Project Objectives](#project-objectives)
-3. [System Overview](#system-overview)
-4. [Technology Stack Explanation](#technology-stack-explanation)
-5. [System Architecture](#system-architecture)
-6. [Frontend Architecture](#frontend-architecture)
-7. [Backend Architecture](#backend-architecture)
-8. [Database Design](#database-design)
-9. [API Design](#api-design)
-10. [Appointment Booking Workflow](#appointment-booking-workflow)
-11. [Image Upload Handling](#image-upload-handling)
-12. [Performance Optimization](#performance-optimization)
-13. [Security Implementation](#security-implementation)
-14. [Testing Strategy](#testing-strategy)
-15. [Future Enhancements](#future-enhancements)
-16. [Conclusion](#conclusion)
+This report focuses on architecture, domain design, workflows, security, and testing. For local setup, run instructions, demo credentials, and repository layout, see [README.md](../README.md).
 
----
+## Problem Statement
 
-## Problem Definition
+Traditional appointment booking often depends on phone calls, manual registers, or disconnected systems. That creates several recurring issues:
 
-Traditional appointment booking in many clinics and hospitals still relies on phone calls, manual registers, or fragmented web portals. These methods create several operational and user experience problems:
+- patients do not have a clear view of doctor availability
+- scheduling conflicts can lead to double-booking
+- doctor discovery is weak without filters like city, specialty, and rating
+- cancellations and status changes are difficult to track consistently
+- administrators lack a centralized operational dashboard
 
-- Patients spend excessive time calling clinics to confirm doctor availability.
-- Double-booking can occur when staff manually maintain schedules.
-- Patients often lack visibility into doctor specialization, city, and quality indicators such as ratings.
-- Cancellation workflows are inconsistent and difficult to track.
-- Administrators do not always have a centralized view of users, doctors, and appointment activity.
+Fracto addresses these problems by centralizing doctor discovery, slot-based scheduling, appointment tracking, and post-consultation ratings in one web application.
 
-Fracto addresses these challenges by providing a centralized digital platform where patients can search for doctors by city, specialization, and rating; check available time slots; book appointments online; cancel appointments when required; and submit ratings after consultation. The system also gives administrators a secure interface to manage doctor records, monitor appointments, and maintain operational control.
+## Project Goals
 
-## Project Objectives
+- provide a simple digital flow for doctor search and appointment booking
+- prevent slot collisions through backend validation and constrained data storage
+- support both patient and admin roles in the same platform
+- expose clean REST APIs for authentication, booking, doctor management, and ratings
+- keep the architecture modular enough for future payment, notification, and mobile extensions
 
-The primary objectives of Fracto are:
+## Solution Scope
 
-- To digitize and streamline the doctor appointment booking lifecycle.
-- To reduce manual scheduling conflicts through controlled slot allocation.
-- To help users discover suitable doctors using meaningful filters such as city, specialization, and ratings.
-- To provide secure authentication and role-based access for users and administrators.
-- To allow appointment booking, cancellation, and post-consultation feedback through REST APIs.
-- To maintain a normalized and scalable database structure using SQL Server and Entity Framework Core.
-- To expose well-documented APIs through Swagger for faster development and testing.
-- To support future scalability for notifications, payments, and mobile integration.
+### Primary Actors
 
-## System Overview
+| Actor | Main Capabilities |
+| --- | --- |
+| Patient / User | Register, log in, search doctors, select slots, confirm booking, cancel appointments, submit ratings |
+| Admin | Manage doctor records, review appointments, update statuses, activate or deactivate users |
 
-Fracto follows a role-based web application model with two main actors: **User** and **Admin**.
+### Delivered Application Modules
 
-### User Journey
-
-1. A new user registers using the application.
-2. The user logs in and receives a JWT access token.
-3. The Angular frontend stores the token and includes it in protected API requests.
-4. The user searches for doctors by city, specialization, and minimum rating.
-5. The user reviews doctor profiles and checks available slots for a selected date.
-6. The user books an appointment for a valid slot.
-7. The backend validates availability, stores the appointment, and returns a confirmation response.
-8. The user can later cancel the appointment if permitted by the business rules.
-9. After consultation, the user can submit a doctor rating linked to the appointment.
-
-### Admin Journey
-
-1. The administrator logs in through the same authentication system.
-2. The admin manages doctor profiles, users, and appointment records.
-3. The admin can add, update, or deactivate doctors.
-4. The admin can monitor bookings and cancel or confirm appointments when necessary.
-
-## Technology Stack Explanation
-
-### Angular
-
-Angular is used for the frontend because it provides a structured component-based architecture, strong routing support, dependency injection, form validation, and a mature HTTP client. These features are well suited for building a role-based single-page application with modules such as authentication, doctor search, appointment booking, and administration.
-
-### ASP.NET Core Web API
-
-ASP.NET Core Web API is selected for the backend because it offers high performance, strong middleware support, built-in dependency injection, JWT authentication integration, and a clean environment for building RESTful services. It is also well aligned with enterprise-grade architectural practices such as layered services, repositories, DTOs, and Swagger documentation.
-
-### SQL Server
-
-SQL Server is chosen as the database because it is reliable for transactional systems, provides indexing and constraint support, integrates smoothly with the Microsoft development ecosystem, and is appropriate for structured healthcare-style data such as appointments, users, and doctor records.
-
-### Entity Framework Core
-
-Entity Framework Core simplifies data access by mapping C# entity classes to database tables. It improves development speed, supports migrations, LINQ-based querying, eager loading, and validation through Fluent API or data annotations. It also helps keep the data access layer maintainable.
-
-### JWT Authentication
-
-JWT is used to implement stateless, secure authentication between the Angular client and the backend API. The client includes the token in the `Authorization` header, and the server validates claims such as user identity and role.
-
-### Swagger
-
-Swagger is included for API discoverability, testing, and documentation. It improves developer productivity and makes it easier to validate endpoint contracts during implementation and review.
+| Area | Current Implementation |
+| --- | --- |
+| Authentication | Login and registration flow with JWT session handling |
+| Doctor Discovery | Search by city, specialization, rating, and appointment date |
+| Booking | Slot selection followed by a checkout-style payment page and appointment creation |
+| Appointment Management | View appointments, filter by status, cancel active bookings |
+| Ratings | Submit feedback only for completed appointments |
+| Administration | Manage doctors, users, and appointment statuses |
+| API Testing | Swagger UI enabled for backend exploration and secure endpoint testing |
 
 ## System Architecture
 
-Fracto uses a layered architecture that separates concerns across presentation, API, business logic, persistence, and security.
+Fracto follows a layered architecture with a standalone Angular client, an ASP.NET Core API, domain services, and a relational data store managed through Entity Framework Core.
 
-### Architecture Layers
+### Architecture Diagram
 
-- **Frontend Layer:** Angular SPA for user and admin interfaces.
-- **Backend API Layer:** ASP.NET Core controllers exposing REST endpoints.
-- **Business Logic Layer:** Services implementing booking rules, validation, and rating logic.
-- **Database Layer:** SQL Server accessed through Entity Framework Core.
-- **Authentication Layer:** JWT token generation, validation, and role-based authorization.
-
-### Textual Architecture Diagram
-
-```text
-[ User / Admin Browser ]
-          |
-          v
-[ Angular Frontend ]
-  - Components
-  - Routing
-  - Services
-  - Guards
-  - Interceptors
-          |
-   HTTPS + JSON + JWT
-          |
-          v
-[ ASP.NET Core Web API ]
-  - Controllers
-  - Middleware
-  - Swagger
-          |
-          v
-[ Business Services ]
-  - Auth Service
-  - Doctor Service
-  - Appointment Service
-  - Rating Service
-          |
-          v
-[ Repository / EF Core Layer ]
-  - DbContext
-  - Entity Configurations
-          |
-          v
-[ SQL Server Database ]
-  - Users
-  - Doctors
-  - Specializations
-  - Appointments
-  - Ratings
-
-Cross-Cutting:
-- JWT Authentication
-- Exception Handling
-- Validation
-- Logging
-- File Upload Storage
+```mermaid
+flowchart LR
+    B[User or Admin Browser] --> UI[Angular SPA]
+    UI --> G[Route Guards and HTTP Services]
+    G --> API[ASP.NET Core Web API]
+    API --> C[Controllers]
+    C --> S[Domain Services]
+    S --> EF[FractoDbContext / EF Core]
+    EF --> DB[(SQL Server or SQLite)]
+    API --> X[Exception Middleware]
+    API --> J[JWT Authentication and Authorization]
+    API --> SW[Swagger UI]
 ```
 
-## Frontend Architecture
-
-The Angular application is designed as a modular single-page application with reusable components and service-driven data access.
-
-### Routing
-
-Angular Router manages navigation between:
-
-- `/login`
-- `/register`
-- `/doctors/search`
-- `/doctors/:id`
-- `/appointments`
-- `/admin/doctors`
-- `/admin/appointments`
-- `/admin/users`
-
-Route guards protect authenticated and admin-only routes.
-
-### Components
-
-Suggested components include:
-
-- `LoginComponent`
-- `RegisterComponent`
-- `DoctorSearchComponent`
-- `DoctorCardComponent`
-- `DoctorDetailComponent`
-- `SlotListComponent`
-- `AppointmentBookingComponent`
-- `AppointmentListComponent`
-- `RatingFormComponent`
-- `AdminDashboardComponent`
-- `DoctorManagementComponent`
-
-### Services
-
-Angular services encapsulate API calls and shared state:
-
-- `AuthService`
-- `DoctorService`
-- `AppointmentService`
-- `RatingService`
-- `AdminService`
-
-These services use Angular `HttpClient` to communicate with the backend.
-
-### State Management
-
-For a capstone-scale project, RxJS `BehaviorSubject` and `Observable` patterns are sufficient for managing:
-
-- Logged-in user state
-- JWT token and role information
-- Selected filters
-- Appointment refresh events
-
-NgRx can be introduced later if the state model becomes more complex.
-
-### UI Structure
-
-The interface can be organized into:
-
-- Public pages: login and registration
-- User dashboard: doctor search, booking, appointment history
-- Admin dashboard: doctor, user, and appointment management
-- Shared UI: navbar, footer, loading spinner, pagination, form validators, and alerts
-
-## Backend Architecture
-
-The backend is implemented as an ASP.NET Core Web API project with a clear separation between transport logic, business rules, and persistence.
-
-### Controllers
-
-Controllers receive HTTP requests, validate the incoming DTOs, call services, and return structured responses.
-
-Examples:
-
-- `AuthController`
-- `DoctorsController`
-- `AppointmentsController`
-- `RatingsController`
-
-### Services
-
-Services implement business rules such as:
-
-- Validating login credentials
-- Generating JWT tokens
-- Filtering doctors by city, specialization, and rating
-- Checking appointment slot availability
-- Preventing invalid ratings
-
-### Repositories
-
-Repositories abstract the data access layer and centralize interaction with Entity Framework Core. This improves testability and makes query optimization easier.
-
-### DTOs
-
-DTOs protect the API contract by separating transport objects from entity models.
-
-Examples:
-
-- `RegisterRequestDto`
-- `LoginRequestDto`
-- `DoctorSearchResponseDto`
-- `BookAppointmentRequestDto`
-- `RatingCreateDto`
-
-### Entity Models
-
-Entity classes map to database tables:
-
-- `User`
-- `Doctor`
-- `Specialization`
-- `Appointment`
-- `Rating`
-
-### JWT Authentication
-
-JWT bearer authentication is configured in the API startup pipeline. Token claims carry the user id, email, and role. `[Authorize]` secures protected endpoints, while `[Authorize(Roles = "Admin")]` protects administrative functionality.
-
-### Swagger Integration
-
-Swagger is configured to:
-
-- Generate OpenAPI documentation
-- Support interactive API testing
-- Accept bearer tokens in the Swagger UI for secured endpoints
-
-## Database Design
-
-The database is normalized around the core appointment domain.
-
-### Users
-
-Stores application users including standard users and administrators.
-
-Important attributes:
-
-- `UserId`
-- `FirstName`
-- `LastName`
-- `Email`
-- `PasswordHash`
-- `Role`
-- `City`
-- `ProfileImagePath`
-
-### Specializations
-
-Stores medical specialization categories such as Cardiologist, Dentist, or Dermatologist.
-
-### Doctors
-
-Stores doctor profiles and links each doctor to exactly one specialization.
-
-Important attributes:
-
-- `DoctorId`
-- `FullName`
-- `SpecializationId`
-- `City`
-- `AverageRating`
-- `ConsultationStartTime`
-- `ConsultationEndTime`
-- `SlotDurationMinutes`
-
-### Appointments
-
-Stores booking transactions between users and doctors.
-
-Important attributes:
-
-- `AppointmentId`
-- `UserId`
-- `DoctorId`
-- `AppointmentDate`
-- `TimeSlot`
-- `Status`
-
-### Ratings
-
-Stores post-consultation ratings for doctors and links the feedback to the originating appointment.
-
-### Textual ER Explanation
-
-- One **User** can create many **Appointments**.
-- One **Doctor** can receive many **Appointments**.
-- One **Specialization** can contain many **Doctors**.
-- One **User** can submit many **Ratings**, but each rating belongs to one completed **Appointment**.
-- One **Doctor** can receive many **Ratings**.
-
-## API Design
-
-Fracto follows RESTful conventions with JSON request and response bodies.
-
-### Major API Modules
-
-- Authentication APIs
-- Doctor APIs
-- Appointment APIs
-- Rating APIs
-
-### Authentication APIs
-
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-
-### Doctor APIs
-
-- `GET /api/doctors`
-- `GET /api/doctors/search`
-- `POST /api/doctors`
-- `PUT /api/doctors/{id}`
-- `DELETE /api/doctors/{id}`
-
-### Appointment APIs
-
-- `GET /api/appointments`
-- `POST /api/appointments/book`
-- `DELETE /api/appointments/{id}`
-
-### Rating APIs
-
-- `POST /api/ratings`
-- `GET /api/doctors/{id}/ratings`
-
-Detailed request and response examples are provided in `documentation/REST_API_Design.md`.
-
-## Appointment Booking Workflow
-
-The appointment booking workflow is the core business flow of the system.
-
-1. The user logs in and receives a JWT token.
-2. The user searches for a doctor using filter criteria.
-3. The frontend requests available slots for a selected doctor and date.
-4. The user selects a slot and submits the booking request.
-5. The backend validates user identity, doctor existence, and slot availability.
-6. The backend checks if another active appointment already occupies the slot.
-7. If validation succeeds, the appointment is stored with status `Booked`.
-8. A confirmation response is returned to the frontend.
-9. The user's appointment history reflects the new booking immediately.
-
-## Image Upload Handling
-
-Profile image upload is handled in ASP.NET Core using `IFormFile`.
-
-### Process
-
-1. The client submits a `multipart/form-data` request.
-2. The controller receives the file through `IFormFile profileImage`.
-3. The backend validates file type and size.
-4. A unique file name is generated using a GUID.
-5. The file is saved in a server folder such as `wwwroot/uploads/profiles`.
-6. Only the relative file path is stored in the database.
-7. The API can later return the file URL for display in the Angular frontend.
-
-### Benefits
-
-- Keeps binary files out of the database
-- Simplifies image serving
-- Reduces database size and improves maintainability
-
-## Performance Optimization
-
-Performance is improved through a combination of database, EF Core, and API design practices.
-
-### Database Optimization
-
-- Add indexes on `Users.Email`, `Doctors.City`, `Doctors.SpecializationId`, `Appointments(UserId, AppointmentDate)`, and `Ratings(DoctorId)`.
-- Use a filtered unique index on doctor date and slot to prevent duplicate active bookings.
-- Store `AverageRating` and `TotalReviews` on the doctor record for fast filtering.
-
-### EF Core Best Practices
-
-- Use `AsNoTracking()` for read-only queries.
-- Use projection with DTOs instead of loading entire entity graphs.
-- Include related data selectively through `Include()` only where needed.
-- Use asynchronous methods such as `ToListAsync()` and `SaveChangesAsync()`.
-- Apply pagination on doctor listing and appointment history APIs.
-
-### API Optimization
-
-- Return paged results for large datasets.
-- Filter on the server side to reduce payload size.
-- Cache static reference data such as specialization lists when appropriate.
-
-## Security Implementation
-
-Security is critical because the system handles authentication and healthcare-related scheduling data.
-
-### Authentication
-
-- Passwords are stored as hashes, not plain text.
-- JWT tokens are issued only after successful authentication.
-- Expiration time is enforced on every token.
-
-### Authorization
-
-- Standard users can only view and manage their own appointments.
-- Admin users can manage doctors, users, and all appointments.
-- Role-based policies secure admin endpoints.
-
-### API Protection Strategies
-
-- Use HTTPS in deployment.
-- Validate input models to reduce malformed requests.
-- Restrict file upload types and size limits.
-- Apply centralized exception handling to avoid leaking internal details.
-- Use CORS policy configuration to allow only trusted frontend origins.
+### Architectural Notes
+
+- The frontend is implemented as a standalone Angular application with feature pages and shared services.
+- The backend uses controller and service layers rather than a separate repository abstraction.
+- Persistence is handled directly through `FractoDbContext` and EF Core queries.
+- The database provider is configuration-driven, with SQL Server as the primary design target and SQLite supported for local flexibility.
+- Cross-cutting concerns include JWT authentication, centralized exception handling, CORS, and Swagger.
+
+## Frontend Design
+
+The frontend is organized around route-level feature pages and service-driven API communication.
+
+### Route Map
+
+| Route | Purpose | Protection |
+| --- | --- | --- |
+| `/login` | user sign-in page | public |
+| `/register` | user registration page | public |
+| `/doctors` | doctor search, filters, and slot selection | authenticated |
+| `/payment` | checkout-style booking confirmation form | authenticated |
+| `/appointments` | appointment history, cancellation, and rating | authenticated |
+| `/admin` | admin console for doctors, users, and appointments | admin only |
+
+### Frontend Modules
+
+| Module | Responsibility |
+| --- | --- |
+| `AuthPageComponent` | login and registration experience with demo account shortcuts |
+| `DoctorsPageComponent` | doctor search, filter application, and slot-based booking entry |
+| `PaymentPageComponent` | payment-form workflow before appointment creation |
+| `AppointmentsPageComponent` | appointment history, cancellation flow, and rating submission |
+| `AdminPageComponent` | consolidated admin operations across doctors, users, and appointments |
+
+### Frontend Design Choices
+
+- Angular signals are used for local UI state such as loading, feedback messages, and session-derived values.
+- Feature pages call typed services such as `AuthService`, `DoctorService`, `AppointmentService`, and `RatingService`.
+- Route guards enforce authentication and role-based access before navigation.
+- The current UI deliberately uses a clean card-based layout with booking actions visible close to the relevant doctor records.
+
+## Backend Design
+
+The backend exposes REST endpoints through controllers and keeps business rules inside dedicated service classes.
+
+### Backend Module Summary
+
+| Layer | Key Elements |
+| --- | --- |
+| Controllers | `AuthController`, `DoctorsController`, `AppointmentsController`, `RatingsController`, `SpecializationsController`, `UsersController` |
+| Services | `AuthService`, `DoctorService`, `AppointmentService`, `RatingService`, `SpecializationService`, `UserService`, `FileStorageService` |
+| Persistence | `FractoDbContext` with EF Core relationships, indexes, and constraints |
+| Security | JWT bearer authentication, role checks, password hashing with BCrypt |
+| API Tooling | Swagger/OpenAPI with bearer token support |
+
+### Request Handling Flow
+
+```mermaid
+sequenceDiagram
+    participant U as Angular UI
+    participant C as API Controller
+    participant S as Domain Service
+    participant D as FractoDbContext
+    participant DB as Database
+
+    U->>C: HTTP request
+    C->>S: DTO + user context
+    S->>D: Query or command
+    D->>DB: SQL generated by EF Core
+    DB-->>D: Data result
+    D-->>S: Entities / projections
+    S-->>C: Response DTO
+    C-->>U: JSON response
+```
+
+### Important Backend Behaviors
+
+- authentication returns a JWT plus a user summary payload
+- doctor search supports city, specialization, minimum rating, and appointment date filters
+- appointment booking validates date, consultation window, slot alignment, and active slot collisions
+- ratings are allowed only for the appointment owner and only when the appointment is completed
+- admin-only operations include doctor management, appointment status updates, and user activation changes
+
+## Data Model
+
+The system is centered on five core entities:
+
+| Entity | Purpose |
+| --- | --- |
+| `Users` | stores patient and admin accounts |
+| `Specializations` | stores doctor specialty reference data |
+| `Doctors` | stores searchable doctor profiles and consultation schedules |
+| `Appointments` | stores slot-based booking transactions and status history |
+| `Ratings` | stores post-consultation feedback linked to appointments |
+
+### Relationship Highlights
+
+- one user can create many appointments
+- one doctor can receive many appointments
+- one specialization can classify many doctors
+- one user can create many ratings
+- one doctor can receive many ratings
+- one appointment can have zero or one rating
+
+For the full entity relationship diagram, see [ER_Diagram.md](./ER_Diagram.md).  
+For schema details and constraints, see [Database_Design.md](../database/Database_Design.md).
+
+## API Design Summary
+
+Fracto follows REST-style API design with JSON request and response bodies.
+
+| Module | Example Endpoints |
+| --- | --- |
+| Authentication | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` |
+| Doctors | `GET /api/doctors`, `GET /api/doctors/search`, `POST /api/doctors`, `PUT /api/doctors/{id}`, `DELETE /api/doctors/{id}` |
+| Appointments | `GET /api/appointments`, `POST /api/appointments/book`, `DELETE /api/appointments/{id}`, `PUT /api/appointments/{id}/status` |
+| Ratings | `POST /api/ratings`, `GET /api/doctors/{id}/ratings` |
+| Reference Data | `GET /api/specializations` |
+| Admin / Users | `GET /api/users`, user status management endpoints |
+
+Detailed request and response examples are documented in [REST_API_Design.md](./REST_API_Design.md).
+
+## Core Workflow: Booking a Consultation
+
+Booking is the most important user journey in the application. The implemented flow is:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI as Angular Frontend
+    participant API as Fracto API
+    participant DB as Database
+
+    User->>UI: Search doctors with filters
+    UI->>API: GET /api/doctors/search
+    API->>DB: Query doctors and availability
+    DB-->>API: Matching doctors
+    API-->>UI: Paginated doctor results
+    User->>UI: Select doctor slot
+    UI->>UI: Open checkout-style payment page
+    User->>UI: Submit payment form
+    UI->>API: POST /api/appointments/book
+    API->>DB: Validate slot and insert appointment
+    DB-->>API: Stored appointment
+    API-->>UI: Confirmation payload
+    UI-->>User: Show confirmation popup
+```
+
+### Workflow Notes
+
+- the payment step is currently a simulated checkout UI, not a live payment gateway integration
+- appointment creation happens only after the payment form is submitted successfully
+- slot uniqueness is protected by both service validation and a filtered database index
+
+## Security and Reliability
+
+### Security Controls
+
+- passwords are hashed with BCrypt before storage
+- JWT bearer authentication protects user and admin routes
+- admin functionality is restricted through role-based authorization
+- malformed requests are handled through centralized exception middleware
+- CORS is explicitly configured for trusted frontend origins
+
+### Data Integrity Controls
+
+- unique email addresses prevent duplicate accounts
+- appointment slot conflicts are blocked at service and database levels
+- rating submission is limited to completed appointments and one rating per appointment
+- foreign keys preserve consistency between users, doctors, appointments, and ratings
+
+For authentication-specific flow details, see [JWT_Authentication_Flow.md](./JWT_Authentication_Flow.md).
 
 ## Testing Strategy
 
-Fracto should be tested at multiple layers.
+Testing in Fracto combines automated tests with API-level validation.
 
-### Frontend Testing
+### Current Automated Test Coverage
 
-- Unit test Angular components such as login, search filters, and booking forms.
-- Test services with mocked HTTP responses.
-- Verify route guards and interceptor behavior.
+| Area | Current Coverage |
+| --- | --- |
+| Frontend | app shell smoke tests, auth service session tests, auth guard navigation tests |
+| Backend | service tests for doctor search, slot availability, doctor validation, doctor creation mapping, and specialization ordering |
 
-### Backend Testing
+### Manual Verification
 
-- Unit test services such as appointment booking and rating submission.
-- Integration test controllers with an in-memory or test SQL database.
-- Validate JWT-protected endpoints with authorized and unauthorized requests.
+- Swagger is enabled to test registration, login, and protected endpoints
+- the Angular UI supports full-path verification of login, doctor search, payment, booking, cancellation, and rating workflows
+- admin flows can be verified with the seeded admin account
 
-### Swagger Testing
+## Supporting Documentation Map
 
-Swagger UI can be used for:
+To avoid duplication, the project documentation is intentionally split by purpose:
 
-- Registering and logging in test users
-- Copying the JWT token into the authorize dialog
-- Testing secured CRUD endpoints
-- Verifying request and response contracts
+| Document | Purpose |
+| --- | --- |
+| [README.md](../README.md) | setup, run instructions, demo accounts, repository orientation |
+| [ER_Diagram.md](./ER_Diagram.md) | entity relationships and database cardinality |
+| [REST_API_Design.md](./REST_API_Design.md) | endpoint contracts and request-response examples |
+| [JWT_Authentication_Flow.md](./JWT_Authentication_Flow.md) | token lifecycle and authorization flow |
+| [Database_Design.md](../database/Database_Design.md) | schema and indexing details |
 
 ## Future Enhancements
 
-The system can be extended with advanced capabilities after the base version is completed.
-
-- **SignalR Notifications:** Real-time booking, confirmation, and cancellation alerts.
-- **Mobile Application:** Native or cross-platform app for Android and iOS users.
-- **Payment Integration:** Online consultation fee payments during appointment booking.
-- **AI-Based Doctor Recommendations:** Intelligent doctor suggestions based on history, location, ratings, and specialization match.
-- **Calendar Sync:** Sync appointments with Google Calendar or Outlook.
-- **Email and SMS Alerts:** Automated reminders before appointment time.
+- real payment gateway integration
+- notifications for booking confirmations and reminders
+- calendar sync support
+- richer user profile and image upload UI
+- deeper test coverage for controllers and end-to-end scenarios
+- mobile-friendly extension or dedicated mobile client
 
 ## Conclusion
 
-Fracto is a practical and scalable online doctor appointment booking platform that solves the inefficiencies of manual scheduling by providing a secure, centralized, and user-friendly digital system. By combining Angular, ASP.NET Core Web API, SQL Server, Entity Framework Core, JWT authentication, and Swagger, the solution delivers a modern full-stack architecture suitable for academic submission as well as real-world extension. The design supports accurate appointment scheduling, efficient doctor discovery, secure role-based access, and future enhancements such as notifications, mobile support, and payment integration.
+Fracto demonstrates a practical full-stack solution for digital appointment booking with clear role separation, strong domain modeling, and a user flow that moves cleanly from authentication to discovery, booking, and follow-up. The current implementation is already suitable for capstone presentation, and the surrounding documentation is now separated by responsibility so the report can focus on design quality rather than repeating setup instructions.
