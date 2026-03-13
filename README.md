@@ -117,12 +117,17 @@ database/
   Database_Design.md
   Fracto_Database.sql
 
+tests/
+  Fracto.Api.Tests/           xUnit backend tests
+
 documentation/
   ER_Diagram.md
   Fracto_Project_Report.md
-  GitHub_Project_Structure.md
   JWT_Authentication_Flow.md
   REST_API_Design.md
+
+README.md
+.gitignore
 ```
 
 ## Documentation
@@ -133,7 +138,6 @@ The repository also includes supporting technical documents:
 - [REST_API_Design.md](/c:/Users/rajha/Wipro/Capstone/documentation/REST_API_Design.md)
 - [JWT_Authentication_Flow.md](/c:/Users/rajha/Wipro/Capstone/documentation/JWT_Authentication_Flow.md)
 - [ER_Diagram.md](/c:/Users/rajha/Wipro/Capstone/documentation/ER_Diagram.md)
-- [GitHub_Project_Structure.md](/c:/Users/rajha/Wipro/Capstone/documentation/GitHub_Project_Structure.md)
 - [Database_Design.md](/c:/Users/rajha/Wipro/Capstone/database/Database_Design.md)
 - [Fracto_Database.sql](/c:/Users/rajha/Wipro/Capstone/database/Fracto_Database.sql)
 

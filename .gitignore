@@ -13,6 +13,7 @@ dist/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 
 # Environment and secrets
 .env
@@ -23,6 +24,7 @@ appsettings.*.local.json
 # IDE
 .idea/
 .vscode/
+.dotnet/
 
 # OS
 Thumbs.db

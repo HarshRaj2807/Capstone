@@ -1,62 +1,115 @@
-# Fracto Textual ER Diagram
+# Fracto ER Diagram
 
-## ER Diagram
+## Detailed Mermaid ER Diagram
 
-```text
-Users (1) --------------------< (M) Appointments (M) >-------------------- (1) Doctors
-  |                                                                       |
-  |                                                                       |
-  |                                                                       v
-  |                                                              Specializations
-  |                                                                     (1)
-  |
-  v
-Ratings (M) ------------------------------------------------------------> Doctors (1)
-  ^
-  |
-Appointments (1)
+```mermaid
+erDiagram
+    USERS ||--o{ APPOINTMENTS : books
+    DOCTORS ||--o{ APPOINTMENTS : receives
+    SPECIALIZATIONS ||--o{ DOCTORS : classifies
+    USERS ||--o{ RATINGS : writes
+    DOCTORS ||--o{ RATINGS : receives
+    APPOINTMENTS ||--o| RATINGS : may_generate
+
+    USERS {
+        int UserId PK
+        string FirstName
+        string LastName
+        string Email UK
+        string PasswordHash
+        string PhoneNumber
+        string Role
+        string City
+        string ProfileImagePath
+        bool IsActive
+        datetime CreatedAtUtc
+        datetime UpdatedAtUtc
+    }
+
+    SPECIALIZATIONS {
+        int SpecializationId PK
+        string SpecializationName UK
+        string Description
+        bool IsActive
+    }
+
+    DOCTORS {
+        int DoctorId PK
+        int SpecializationId FK
+        string FullName
+        string City
+        int ExperienceYears
+        decimal ConsultationFee
+        decimal AverageRating
+        int TotalReviews
+        time ConsultationStartTime
+        time ConsultationEndTime
+        int SlotDurationMinutes
+        string ProfileImagePath
+        bool IsActive
+        datetime CreatedAtUtc
+        datetime UpdatedAtUtc
+    }
+
+    APPOINTMENTS {
+        int AppointmentId PK
+        int UserId FK
+        int DoctorId FK
+        date AppointmentDate
+        time TimeSlot
+        string Status
+        string ReasonForVisit
+        string CancellationReason
+        datetime BookedAtUtc
+        datetime CancelledAtUtc
+    }
+
+    RATINGS {
+        int RatingId PK
+        int AppointmentId FK UK
+        int UserId FK
+        int DoctorId FK
+        int RatingValue
+        string ReviewComment
+        datetime CreatedAtUtc
+    }
 ```
 
-## Relationship Explanation
+## Simplified Relationship View
 
-### Users -> Appointments
+```mermaid
+flowchart LR
+    U[Users] -->|book| A[Appointments]
+    D[Doctors] -->|fulfil| A
+    S[Specializations] -->|categorize| D
+    A -->|optional post-visit feedback| R[Ratings]
+    U -->|write| R
+    D -->|receive| R
+```
 
-- Cardinality: `1 : many`
-- One user can book many appointments.
-- Every appointment belongs to exactly one user.
+## Cardinality Summary
 
-### Doctors -> Appointments
+- `Users 1 -> many Appointments`: one user can book many appointments.
+- `Doctors 1 -> many Appointments`: one doctor can have many appointments over time.
+- `Specializations 1 -> many Doctors`: each doctor belongs to one specialization.
+- `Users 1 -> many Ratings`: a user can submit ratings across different completed appointments.
+- `Doctors 1 -> many Ratings`: a doctor can receive many ratings.
+- `Appointments 1 -> 0..1 Ratings`: an appointment may have no rating or exactly one rating.
 
-- Cardinality: `1 : many`
-- One doctor can have many appointments over time.
-- Every appointment is booked with exactly one doctor.
+## Key Constraints
 
-### Specializations -> Doctors
-
-- Cardinality: `1 : many`
-- One specialization can be assigned to many doctors.
-- Every doctor belongs to exactly one specialization.
-
-### Users -> Ratings -> Doctors
-
-- Cardinality: `User 1 : many Ratings`
-- Cardinality: `Doctor 1 : many Ratings`
-- A user can rate multiple doctors across different appointments.
-- A doctor can receive ratings from multiple users.
-- Each rating belongs to one appointment, one user, and one doctor.
-
-### Appointments -> Ratings
-
-- Cardinality: `1 : 0..1`
-- An appointment may have one rating after the consultation is completed.
-- A rating cannot exist without a valid appointment.
+- `Users.Email` is unique.
+- `Specializations.SpecializationName` is unique.
+- `Ratings.AppointmentId` is unique, which enforces one rating per appointment.
+- `Appointments` uses a filtered unique index on `(DoctorId, AppointmentDate, TimeSlot)` for active bookings to prevent double-booking.
+- All foreign keys are configured with restricted deletes in the EF Core model.
 
 ## Business Meaning
 
-The ER model supports the main business requirements:
+This ER model supports the full booking lifecycle:
 
-- User account management
-- Doctor discovery by specialization and city
-- Appointment booking and cancellation
-- Post-consultation doctor feedback
-- Administrative monitoring of platform activity
+- user and admin account management
+- doctor classification by specialization
+- doctor search by city, specialty, and rating
+- slot-based appointment booking and cancellation
+- post-consultation rating and review capture
