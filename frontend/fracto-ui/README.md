@@ -1,19 +1,19 @@
 # Fracto UI
 
-Fracto UI is the Angular frontend for the Fracto doctor appointment booking system. It provides the user-facing experience for registration, login, doctor discovery, appointment booking, payment, confirmation, appointment management, and admin workflows.
+Fracto UI is the Angular frontend for the Fracto doctor appointment booking system. It handles the main user experience of the product, including authentication, doctor discovery, appointment booking, payment, booking confirmation, and admin-facing pages.
 
-## What this frontend covers
+## What this app includes
 
-- authentication screens for login and registration
+- login and registration screens
 - doctor search and filtering
-- appointment booking flow
-- payment page before final confirmation
+- slot-based appointment booking
+- payment step before booking confirmation
 - confirmation popup after successful booking
-- appointment history and cancellation
-- rating flow
+- appointments page for tracking and cancellation
+- doctor rating flow
 - admin pages for management tasks
 
-## Run the frontend locally
+## Run the frontend
 
 ```bash
 npm install
@@ -24,7 +24,7 @@ The app runs at:
 
 - `http://localhost:4200`
 
-If your machine opens the app on `http://127.0.0.1:4200`, that is also supported by the backend CORS configuration.
+If it opens on `http://127.0.0.1:4200`, that is also supported by the backend configuration.
 
 ## Build the frontend
 
@@ -32,16 +32,16 @@ If your machine opens the app on `http://127.0.0.1:4200`, that is also supported
 npm run build
 ```
 
-The production-ready output is generated in the `dist/` directory.
+The production build output is generated in the `dist/` folder.
 
-## Backend dependency
+## Backend connection
 
-This frontend is expected to run with the Fracto ASP.NET Core API available locally. The backend is configured by default at:
+This frontend expects the Fracto ASP.NET Core API to be running locally at:
 
 - `http://localhost:5104`
 
-If the API is not running, login, registration, booking, and management actions will not work correctly.
+If the backend is not running, login, registration, booking, payment, and admin actions will not work correctly.
 
 ## Development notes
 
-The frontend is built with Angular standalone components and communicates with the backend through Angular services and HTTP interceptors. Authentication state is stored on the client side and protected routes are handled with guards.
+The frontend is built using Angular standalone components. API communication is handled through Angular services, route protection is handled with guards, and authenticated requests are managed through HTTP interceptors.
