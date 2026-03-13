@@ -4,6 +4,13 @@
 
 This document describes the currently implemented Fracto API surface based on the live ASP.NET Core controllers and DTOs in the project.
 
+## Scope
+
+This file focuses on endpoint contracts, request bodies, response shapes, and access rules.
+
+- For token lifecycle, middleware validation, and frontend session behavior, see [JWT_Authentication_Flow.md](./JWT_Authentication_Flow.md).
+- For table design and storage constraints behind these endpoints, see [Database_Design.md](../database/Database_Design.md).
+
 ### Base Path
 
 - Local development base URL: `http://localhost:5104/api`
@@ -707,4 +714,5 @@ Success response:
 
 - [JWT_Authentication_Flow.md](./JWT_Authentication_Flow.md)
 - [ER_Diagram.md](./ER_Diagram.md)
+- [Database_Design.md](../database/Database_Design.md)
 - [Fracto_Project_Report.md](./Fracto_Project_Report.md)

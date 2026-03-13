@@ -4,6 +4,13 @@
 
 Fracto uses JWT bearer authentication to protect user and admin API operations while keeping the frontend session flow simple. The Angular application stores the authenticated session on the client, attaches the token through an HTTP interceptor, and relies on route guards to control navigation.
 
+## Scope
+
+This file explains token generation, client-side session storage, interceptor behavior, guards, and backend validation.
+
+- For concrete auth endpoint payloads, see [REST_API_Design.md](./REST_API_Design.md).
+- For the wider application architecture, see [Fracto_Project_Report.md](./Fracto_Project_Report.md).
+
 ## Current Authentication Architecture
 
 ```mermaid

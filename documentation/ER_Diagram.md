@@ -1,5 +1,10 @@
 # Fracto ER Diagram
 
+This file is the visual relationship reference for the Fracto data model.
+
+- For table-by-table schema details, constraints, and indexes, see [Database_Design.md](../database/Database_Design.md).
+- For endpoint payloads that use this model, see [REST_API_Design.md](./REST_API_Design.md).
+
 ## Detailed Mermaid ER Diagram
 
 ```mermaid
@@ -96,13 +101,11 @@ flowchart LR
 - `Doctors 1 -> many Ratings`: a doctor can receive many ratings.
 - `Appointments 1 -> 0..1 Ratings`: an appointment may have no rating or exactly one rating.
 
-## Key Constraints
+## Reading Notes
 
-- `Users.Email` is unique.
-- `Specializations.SpecializationName` is unique.
-- `Ratings.AppointmentId` is unique, which enforces one rating per appointment.
-- `Appointments` uses a filtered unique index on `(DoctorId, AppointmentDate, TimeSlot)` for active bookings to prevent double-booking.
-- All foreign keys are configured with restricted deletes in the EF Core model.
+- `Ratings.AppointmentId` is unique, which supports the `Appointment 1 -> 0..1 Rating` rule.
+- Active appointment slots are protected by a filtered unique database index.
+- Detailed index and constraint descriptions are documented in [Database_Design.md](../database/Database_Design.md).
 
 ## Business Meaning
 

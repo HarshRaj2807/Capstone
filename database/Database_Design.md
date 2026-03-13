@@ -1,5 +1,12 @@
 # Fracto Database Design
 
+## Scope
+
+This document focuses on table structure, constraints, and indexing decisions.
+
+- For visual entity relationships and cardinality, see [ER_Diagram.md](../documentation/ER_Diagram.md).
+- For API request and response contracts, see [REST_API_Design.md](../documentation/REST_API_Design.md).
+
 ## Overview
 
 The Fracto database is designed in SQL Server to support authentication, doctor discovery, appointment booking, cancellation, and post-consultation ratings. The schema uses five core tables:
@@ -11,6 +18,34 @@ The Fracto database is designed in SQL Server to support authentication, doctor 
 - `Ratings`
 
 The structure keeps the domain normalized while still supporting efficient search and reporting.
+
+## Schema and Index Hotspots
+
+```mermaid
+flowchart LR
+    U["Users<br/>identity and roles"]
+    S["Specializations<br/>reference data"]
+    D["Doctors<br/>directory and schedule"]
+    A["Appointments<br/>booking transactions"]
+    R["Ratings<br/>post-visit feedback"]
+
+    S --> D
+    U --> A
+    D --> A
+    A --> R
+    U --> R
+    D --> R
+
+    I1["Unique email index"]
+    I2["Doctor search index<br/>(City, SpecializationId, AverageRating)"]
+    I3["Active slot unique index<br/>(DoctorId, AppointmentDate, TimeSlot)"]
+    I4["Unique appointment rating index"]
+
+    U -. login lookup .-> I1
+    D -. filtered search .-> I2
+    A -. double-booking prevention .-> I3
+    R -. one review per visit .-> I4
+```
 
 ## Table Design
 
@@ -153,14 +188,12 @@ Indexes:
 - Composite index on `(DoctorId, CreatedAtUtc)`
 - Composite index on `(UserId, DoctorId)`
 
-## Relationship Summary
+## Operational Relationship Notes
 
-- One user can have many appointments.
-- One doctor can have many appointments.
-- One specialization can have many doctors.
-- One user can create many ratings.
-- One doctor can receive many ratings.
-- One appointment can have zero or one rating.
+- `Appointments` is the central transaction table linking users and doctors for a chosen date and slot.
+- `Ratings` depends on completed appointments, which is why `AppointmentId` is unique in the ratings table.
+- `Doctors` depends on `Specializations`, while still carrying denormalized search data such as `AverageRating` and `TotalReviews`.
+- The full PK/FK relationship view is intentionally kept in [ER_Diagram.md](../documentation/ER_Diagram.md) so this file can stay focused on schema behavior.
 
 ## Integrity and Constraint Strategy
 
