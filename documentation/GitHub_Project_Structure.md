@@ -11,7 +11,7 @@ fracto/
   database/
     Fracto_Database.sql
   documentation/
-    Fracto_Capstone_Report.md
+    Fracto_Project_Report.md
     ER_Diagram.md
     REST_API_Design.md
     JWT_Authentication_Flow.md
@@ -24,7 +24,7 @@ fracto/
 - `frontend/`: contains the Angular application for users and administrators.
 - `backend/`: contains the ASP.NET Core Web API project and business logic.
 - `database/`: contains the SQL Server schema script and database documentation.
-- `documentation/`: contains the capstone report and all supplementary technical documents.
+- `documentation/`: contains the main project report and all supplementary technical documents.
 
 ## GitHub Best Practices
 

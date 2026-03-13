@@ -1,71 +1,109 @@
-# Fracto - Online Doctor Appointment Booking System
+# Fracto
 
 ![Angular](https://img.shields.io/badge/Frontend-Angular-DD0031?logo=angular&logoColor=white)
 ![ASP.NET Core](https://img.shields.io/badge/Backend-ASP.NET%20Core%20Web%20API-512BD4?logo=dotnet&logoColor=white)
 ![Entity Framework Core](https://img.shields.io/badge/ORM-Entity%20Framework%20Core-6DB33F?logo=dotnet&logoColor=white)
 ![JWT](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens&logoColor=white)
 ![Swagger](https://img.shields.io/badge/API%20Docs-Swagger-85EA2D?logo=swagger&logoColor=black)
-![SQL Server Design](https://img.shields.io/badge/Database%20Design-SQL%20Server-CC2927?logo=microsoftsqlserver&logoColor=white)
+![SQL Server](https://img.shields.io/badge/Database-SQL%20Server-CC2927?logo=microsoftsqlserver&logoColor=white)
 
-## About the Project
+Fracto is a full-stack doctor appointment booking system built with Angular and ASP.NET Core Web API. It is designed to make the appointment process simple for patients and manageable for administrators, with a clear flow from doctor search to payment and booking confirmation.
 
-Fracto is a full-stack web application for booking doctor appointments online. The idea behind the project is simple: patients should be able to find the right doctor quickly, see available slots, book a consultation without phone calls, and manage their appointments from one place.
+The project helps users discover doctors, check availability, book appointments, complete the consultation fee step, and manage bookings in one place. On the administrative side, it provides a clean way to manage doctors, users, and appointments without relying on manual coordination.
 
-The application supports two roles:
+## Table of Contents
 
-- **User**: can register, log in, search doctors, book appointments, cancel appointments, and rate doctors after consultation
-- **Admin**: can manage doctors, users, and appointment statuses
+- [Overview](#overview)
+- [Highlights](#highlights)
+- [Features](#features)
+- [Technology Stack](#technology-stack)
+- [How the System Works](#how-the-system-works)
+- [Screenshots](#screenshots)
+- [Project Structure](#project-structure)
+- [Running the Project](#running-the-project)
+- [Demo Accounts](#demo-accounts)
+- [Typical Flow](#typical-flow)
+- [API Coverage](#api-coverage)
+- [Database Note](#database-note)
+- [Documentation](#documentation)
+- [Current Status](#current-status)
+- [Author](#author)
 
-This project was built as a professional capstone-style solution using Angular for the frontend and ASP.NET Core Web API for the backend.
+## Overview
 
-## What Fracto Solves
+Booking a doctor appointment is still more difficult than it should be in many places. Patients often depend on phone calls, unclear schedules, or manual follow-up just to confirm a slot. On the clinic side, handling bookings and cancellations without a proper system can lead to confusion, wasted time, and double-booking risks.
 
-In many clinics, appointment booking is still handled manually or through disconnected systems. That usually creates a few common problems:
+Fracto solves that with a structured digital workflow:
 
-- users do not know which doctors are available
-- comparing doctors by specialization or ratings is difficult
-- double-booking becomes more likely
-- cancellations and status updates are harder to track
-- admins do not have a clean overview of the full system
+- patients can search doctors by city, specialization, and ratings
+- appointments are booked against available time slots
+- payment happens before final confirmation
+- users can cancel appointments and submit ratings later
+- admins can manage the platform through a dedicated interface
 
-Fracto solves that by offering a structured digital workflow for doctor discovery, slot-based booking, appointment tracking, and admin management.
+## Highlights
 
-## Main Features
+- End-to-end booking flow from doctor search to payment and booking confirmation
+- Separate patient and admin experiences with role-based access
+- Angular frontend with a clean multi-page workflow
+- ASP.NET Core Web API with JWT authentication and Swagger support
+- SQL Server configured as the active backend database
+- Project documentation packaged in the same repository
 
-- Secure user registration and login
+## Features
+
+- Secure registration and login
 - JWT-based authentication and authorization
-- Doctor search by city, specialization, and rating
-- Dynamic time slot availability
-- Consultation fee payment page before final booking
-- Appointment booking and cancellation
+- Doctor search and filtering
+- Slot-based appointment booking
+- Consultation fee payment page
 - Confirmation popup after successful booking
-- Doctor rating after completed appointments
-- Admin dashboard for doctors, users, and appointments
-- Swagger integration for API testing
-- SQL Server database design with a runnable local development setup
+- Appointment cancellation
+- Doctor rating flow
+- Admin dashboard capabilities
+- Swagger API documentation
+- SQL Server database design and executable script
 
-## Tech Stack
+## Technology Stack
 
 | Layer | Technology |
 | --- | --- |
 | Frontend | Angular 20 |
 | Backend | ASP.NET Core Web API (.NET 10) |
 | ORM | Entity Framework Core |
-| Authentication | JWT Authentication |
-| API Documentation | Swagger |
-| Main Database Design | SQL Server |
-| Local Development Database | SQLite |
+| Authentication | JWT |
+| API Testing | Swagger |
+| Database | SQL Server |
+
+## How the System Works
+
+The patient journey is designed to feel simple and familiar. A user signs in, searches for a doctor, filters by city or specialization, chooses a date and slot, continues to the payment page, and receives a confirmation popup once the appointment is booked successfully. After the consultation, the same user can come back and rate the doctor.
+
+The admin journey is focused on visibility and control. Admin users can review doctor data, monitor users, and keep track of appointments from one place.
+
+## Screenshots
+
+You can replace these placeholders with actual screenshots later for a stronger GitHub presentation.
+
+| Screen | Suggested Image |
+| --- | --- |
+| Login and Register | `docs/screenshots/auth-page.png` |
+| Doctor Search | `docs/screenshots/doctors-page.png` |
+| Payment Page | `docs/screenshots/payment-page.png` |
+| Booking Confirmation | `docs/screenshots/confirmation-popup.png` |
+| Appointments Page | `docs/screenshots/appointments-page.png` |
+| Admin Dashboard | `docs/screenshots/admin-page.png` |
 
 ## Project Structure
 
 ```text
 backend/
-  Fracto.Api/                 runnable ASP.NET Core Web API
+  Fracto.Api/                 Runnable ASP.NET Core Web API
   Appointment_Booking_Logic.md
   Project_Structure.md
 
 frontend/
-  fracto-ui/                  runnable Angular application
+  fracto-ui/                  Runnable Angular application
   Project_Structure.md
 
 database/
@@ -74,19 +112,17 @@ database/
 
 documentation/
   ER_Diagram.md
-  Fracto_Capstone_Report.md
+  Fracto_Project_Report.md
   GitHub_Project_Structure.md
   JWT_Authentication_Flow.md
   REST_API_Design.md
 ```
 
-## Running the Project Locally
+## Running the Project
 
-The easiest way to run the project is with the current default setup, which uses **SQLite for local development**. This keeps the application easy to start without requiring extra SQL Server configuration on every machine.
+Fracto is configured to run on SQL Server by default using the local `SQLEXPRESS` instance.
 
-### 1. Run the Backend
-
-Open a terminal in the project root and run:
+### Start the backend
 
 ```bash
 cd backend/Fracto.Api
@@ -94,12 +130,17 @@ dotnet restore
 dotnet run
 ```
 
-The API will be available at:
+Backend endpoints:
 
-- `http://localhost:5104`
+- API: `http://localhost:5104`
 - Swagger: `http://localhost:5104/swagger`
 
-### 2. Run the Frontend
+SQL Server connection used by default:
+
+- Server: `.\SQLEXPRESS`
+- Database: `FractoDb`
+
+### Start the frontend
 
 Open a second terminal and run:
 
@@ -109,76 +150,69 @@ npm install
 npm start
 ```
 
-The frontend will be available at:
+Frontend URL:
 
 - `http://localhost:4200`
 
-If your browser or local setup uses `127.0.0.1` instead, that works as well.
+If the Angular app opens on `http://127.0.0.1:4200`, that is also supported.
 
 ## Demo Accounts
 
-You can use the seeded accounts below to test the application immediately.
+The repository includes seeded accounts so the project can be explored immediately.
 
-### Admin Account
+| Role | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@fracto.com` | `Admin@123` |
+| User | `user@fracto.com` | `User@123` |
 
-- Email: `admin@fracto.com`
-- Password: `Admin@123`
+## Typical Flow
 
-### User Account
+### Patient
 
-- Email: `user@fracto.com`
-- Password: `User@123`
-
-## Typical User Flow
-
-### User
-
-1. Log in or register
-2. Search for a doctor
-3. Select a city, specialization, and preferred date
-4. Choose an available time slot
-5. Continue to the fee payment page
-6. Confirm the payment and complete the booking
-7. View or cancel the appointment later
-8. Rate the doctor after the consultation is completed
+1. Register or log in
+2. Search doctors using filters
+3. Choose a doctor and available slot
+4. Continue to the payment page
+5. Complete the fee step
+6. See the booking confirmation popup
+7. Review or cancel the appointment later
+8. Rate the doctor after consultation
 
 ### Admin
 
-1. Log in using the admin account
-2. Add or update doctor records
-3. Review all appointments
-4. Change appointment status
-5. View and manage users
+1. Log in with the admin account
+2. Review doctor and user records
+3. Monitor appointments
+4. Manage overall system data
 
 ## API Coverage
 
-The backend includes working endpoints for:
+The backend currently supports:
 
 - authentication
-- specializations
-- doctors
-- appointments
+- doctor listing and search
+- appointment booking
+- appointment cancellation
 - ratings
 - users
+- specializations
 
-Swagger is enabled, so the API can be explored and tested directly from the browser.
+Swagger is enabled to make API testing easier during development and demo sessions.
 
-## SQL Server Note
+## Database Note
 
-The original capstone requirement is based on **SQL Server**, and the full database design is still included in this repository.
-
-Relevant files:
+The project is designed around SQL Server, and the full database material is included here:
 
 - [Database_Design.md](/c:/Users/rajha/Wipro/Capstone/database/Database_Design.md)
 - [Fracto_Database.sql](/c:/Users/rajha/Wipro/Capstone/database/Fracto_Database.sql)
 
-For day-to-day local running, the backend currently defaults to SQLite because it is the most reliable zero-setup option here. If you want to switch back to SQL Server, update the configuration in [appsettings.json](/c:/Users/rajha/Wipro/Capstone/backend/Fracto.Api/appsettings.json).
+The running backend is configured for SQL Server through [appsettings.json](/c:/Users/rajha/Wipro/Capstone/backend/Fracto.Api/appsettings.json). The default connection points to `.\SQLEXPRESS` and uses the `FractoDb` database. SQLite support is still available in the codebase if you ever want a lighter fallback, but SQL Server is now the active default.
 
-## Documentation Included
+## Documentation
 
-This repository also contains the full capstone documentation package:
+Alongside the runnable project, the repository also includes supporting technical documentation:
 
-- [Fracto_Capstone_Report.md](/c:/Users/rajha/Wipro/Capstone/documentation/Fracto_Capstone_Report.md)
+- [Full Project Report](/c:/Users/rajha/Wipro/Capstone/documentation/Fracto_Project_Report.md)
 - [REST_API_Design.md](/c:/Users/rajha/Wipro/Capstone/documentation/REST_API_Design.md)
 - [JWT_Authentication_Flow.md](/c:/Users/rajha/Wipro/Capstone/documentation/JWT_Authentication_Flow.md)
 - [ER_Diagram.md](/c:/Users/rajha/Wipro/Capstone/documentation/ER_Diagram.md)
@@ -186,16 +220,17 @@ This repository also contains the full capstone documentation package:
 
 ## Current Status
 
-The project is now in a good runnable state for local development and demo use:
+Fracto is in a good runnable state for demo and review:
 
-- backend is implemented and builds successfully
-- frontend is implemented and builds successfully
-- seeded demo users are available
-- Swagger is enabled
-- the system can be run locally and tested end to end
+- frontend and backend are implemented
+- authentication is working
+- booking, payment, and confirmation flows are in place
+- Swagger is available
+- demo accounts are seeded
+- database scripts and technical documentation are included
 
 ## Author
 
 **Harsh Raj**  
-**Project Title:** Fracto - Online Doctor Appointment Booking System  
+**Project:** Fracto - Online Doctor Appointment Booking System  
 **Date:** 20/03/2026

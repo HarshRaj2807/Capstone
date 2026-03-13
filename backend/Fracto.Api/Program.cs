@@ -48,7 +48,7 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSett
 var jwtSettings = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>()
     ?? throw new InvalidOperationException("JWT settings are missing from configuration.");
 
-var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "Sqlite";
+var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "SqlServer";
 
 builder.Services.AddDbContext<FractoDbContext>(options =>
 {
@@ -64,7 +64,7 @@ builder.Services.AddDbContext<FractoDbContext>(options =>
     var sqliteConnection = builder.Configuration.GetConnectionString("SqliteConnection")
         ?? "Data Source=fracto.db";
 
-    // SQLite is the default local-dev provider so the project runs with zero extra setup.
+    // The provider is configuration-driven so the app can run against SQL Server or SQLite.
     options.UseSqlite(sqliteConnection);
 });
 

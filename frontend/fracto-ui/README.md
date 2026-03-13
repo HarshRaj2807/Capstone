@@ -1,59 +1,47 @@
-# FractoUi
+# Fracto UI
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.3.20.
+Fracto UI is the Angular frontend for the Fracto doctor appointment booking system. It provides the user-facing experience for registration, login, doctor discovery, appointment booking, payment, confirmation, appointment management, and admin workflows.
 
-## Development server
+## What this frontend covers
 
-To start a local development server, run:
+- authentication screens for login and registration
+- doctor search and filtering
+- appointment booking flow
+- payment page before final confirmation
+- confirmation popup after successful booking
+- appointment history and cancellation
+- rating flow
+- admin pages for management tasks
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Run the frontend locally
 
 ```bash
-ng generate --help
+npm install
+npm start
 ```
 
-## Building
+The app runs at:
 
-To build the project run:
+- `http://localhost:4200`
+
+If your machine opens the app on `http://127.0.0.1:4200`, that is also supported by the backend CORS configuration.
+
+## Build the frontend
 
 ```bash
-ng build
+npm run build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+The production-ready output is generated in the `dist/` directory.
 
-## Running unit tests
+## Backend dependency
 
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+This frontend is expected to run with the Fracto ASP.NET Core API available locally. The backend is configured by default at:
 
-```bash
-ng test
-```
+- `http://localhost:5104`
 
-## Running end-to-end tests
+If the API is not running, login, registration, booking, and management actions will not work correctly.
 
-For end-to-end (e2e) testing, run:
+## Development notes
 
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+The frontend is built with Angular standalone components and communicates with the backend through Angular services and HTTP interceptors. Authentication state is stored on the client side and protected routes are handled with guards.
