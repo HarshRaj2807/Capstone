@@ -34,8 +34,8 @@ interface PaymentContext {
           <p class="eyebrow">Payment</p>
           <h1>Complete the consultation fee to confirm your booking.</h1>
           <p>
-            This step simulates the fee payment experience for the capstone project and completes
-            the appointment booking only after the payment form is submitted.
+            This step uses a simple checkout flow and completes the appointment only after the
+            payment form is submitted.
           </p>
         </div>
 
@@ -57,7 +57,7 @@ interface PaymentContext {
           <article class="summary-card">
             <p class="section-label">Booking Summary</p>
             <h2>{{ paymentContext()!.doctorName }}</h2>
-            <p class="specialization">{{ paymentContext()!.specializationName }} · {{ paymentContext()!.city }}</p>
+            <p class="specialization">{{ paymentContext()!.specializationName }} - {{ paymentContext()!.city }}</p>
 
             <div class="summary-list">
               <div>
@@ -74,7 +74,7 @@ interface PaymentContext {
               </div>
               <div>
                 <span>Reason</span>
-                <strong>{{ paymentContext()!.reasonForVisit }}</strong>
+                <strong>{{ paymentForm.controls.reasonForVisit.value || 'Add a short note below' }}</strong>
               </div>
             </div>
 
@@ -91,29 +91,38 @@ interface PaymentContext {
             <form [formGroup]="paymentForm" (ngSubmit)="processPayment()">
               <label>
                 Cardholder Name
-                <input type="text" formControlName="cardholderName" placeholder="Full name on card" />
+                <input type="text" formControlName="cardholderName" placeholder="Name as shown on card" />
               </label>
 
               <label>
                 Card Number
-                <input type="text" formControlName="cardNumber" maxlength="16" placeholder="4111111111111111" />
+                <input type="text" formControlName="cardNumber" maxlength="16" placeholder="Enter 16-digit card number" />
               </label>
 
               <div class="split-fields">
                 <label>
                   Expiry
-                  <input type="text" formControlName="expiry" maxlength="5" placeholder="12/28" />
+                  <input type="text" formControlName="expiry" maxlength="5" placeholder="MM/YY" />
                 </label>
 
                 <label>
                   CVV
-                  <input type="password" formControlName="cvv" maxlength="3" placeholder="123" />
+                  <input type="password" formControlName="cvv" maxlength="3" placeholder="CVV" />
                 </label>
               </div>
 
               <label>
+                Reason for Visit
+                <textarea
+                  rows="3"
+                  formControlName="reasonForVisit"
+                  maxlength="500"
+                  placeholder="Tell the doctor briefly what you need help with"></textarea>
+              </label>
+
+              <label>
                 UPI / Billing Note
-                <input type="text" formControlName="billingNote" placeholder="Optional reference note" />
+                <input type="text" formControlName="billingNote" placeholder="Optional payment reference note" />
               </label>
 
               <label class="checkbox">
@@ -169,7 +178,8 @@ interface PaymentContext {
     .fee-panel strong { font-size: 1.55rem; }
     form { display: grid; gap: 1rem; }
     label { display: grid; gap: 0.4rem; color: #424740; font-weight: 600; }
-    input { border-radius: 1rem; border: 1px solid #d9d1c3; padding: 0.95rem 1rem; background: #fff; font: inherit; }
+    input, textarea { border-radius: 1rem; border: 1px solid #d9d1c3; padding: 0.95rem 1rem; background: #fff; font: inherit; }
+    textarea { resize: vertical; min-height: 7rem; }
     .split-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     .checkbox { display: flex; gap: 0.75rem; align-items: start; }
     .checkbox input { width: auto; margin-top: 0.2rem; }
@@ -209,12 +219,13 @@ export class PaymentPageComponent implements OnInit {
   });
 
   readonly paymentForm = this.formBuilder.nonNullable.group({
-    cardholderName: [this.authService.currentUser()?.fullName ?? '', [Validators.required]],
-    cardNumber: ['4111111111111111', [Validators.required, Validators.pattern(/^\d{16}$/)]],
-    expiry: ['12/28', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)]],
-    cvv: ['123', [Validators.required, Validators.pattern(/^\d{3}$/)]],
-    billingNote: ['Consultation fee'],
-    acceptTerms: [true, [Validators.requiredTrue]]
+    cardholderName: ['', [Validators.required]],
+    cardNumber: ['', [Validators.required, Validators.pattern(/^\d{16}$/)]],
+    expiry: ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)]],
+    cvv: ['', [Validators.required, Validators.pattern(/^\d{3}$/)]],
+    reasonForVisit: ['', [Validators.required, Validators.maxLength(500)]],
+    billingNote: [''],
+    acceptTerms: [false, [Validators.requiredTrue]]
   });
 
   ngOnInit(): void {
@@ -238,7 +249,11 @@ export class PaymentPageComponent implements OnInit {
       consultationFee,
       appointmentDate,
       timeSlot,
-      reasonForVisit: queryMap.get('reasonForVisit') ?? 'General consultation'
+      reasonForVisit: queryMap.get('reasonForVisit') ?? ''
+    });
+
+    this.paymentForm.patchValue({
+      reasonForVisit: this.paymentContext()!.reasonForVisit
     });
   }
 
@@ -249,11 +264,12 @@ export class PaymentPageComponent implements OnInit {
     }
 
     if (this.paymentForm.invalid) {
-      this.errorMessage.set('Please complete the payment form before continuing.');
+      this.errorMessage.set('Please complete the payment form and add a short reason for the visit.');
       return;
     }
 
     const context = this.paymentContext()!;
+    const formValue = this.paymentForm.getRawValue();
     this.isProcessing.set(true);
     this.errorMessage.set('');
 
@@ -265,7 +281,7 @@ export class PaymentPageComponent implements OnInit {
             doctorId: context.doctorId,
             appointmentDate: context.appointmentDate,
             timeSlot: context.timeSlot,
-            reasonForVisit: context.reasonForVisit
+            reasonForVisit: formValue.reasonForVisit.trim()
           })
         )
       )

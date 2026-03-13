@@ -11,7 +11,7 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <section class="auth-shell">
       <div class="hero-panel">
-        <p class="eyebrow">Capstone Demo</p>
+        <p class="eyebrow">Quick Access</p>
         <h1>Book trusted care without the phone calls.</h1>
         <p class="hero-copy">
           Fracto helps patients discover doctors by city, specialization, and ratings, then book
@@ -82,35 +82,35 @@ import { AuthService } from '../../core/services/auth.service';
             <div class="split-fields">
               <label>
                 First Name
-                <input type="text" formControlName="firstName" />
+                <input type="text" formControlName="firstName" placeholder="Enter first name" />
               </label>
 
               <label>
                 Last Name
-                <input type="text" formControlName="lastName" />
+                <input type="text" formControlName="lastName" placeholder="Enter last name" />
               </label>
             </div>
 
             <label>
               Email
-              <input type="email" formControlName="email" />
+              <input type="email" formControlName="email" placeholder="name@example.com" />
             </label>
 
             <div class="split-fields">
               <label>
                 Password
-                <input type="password" formControlName="password" />
+                <input type="password" formControlName="password" placeholder="Create a password" />
               </label>
 
               <label>
                 Phone Number
-                <input type="text" formControlName="phoneNumber" />
+                <input type="text" formControlName="phoneNumber" placeholder="Enter phone number" />
               </label>
             </div>
 
             <label>
               City
-              <input type="text" formControlName="city" />
+              <input type="text" formControlName="city" placeholder="Enter city" />
             </label>
 
             <button type="submit" [disabled]="isSubmitting()">
@@ -338,22 +338,20 @@ export class AuthPageComponent {
   );
   readonly isSubmitting = signal(false);
   readonly errorMessage = signal('');
-  readonly infoMessage = signal(
-    'Tip: use the seeded demo accounts for the fastest way to explore the full project.'
-  );
+  readonly infoMessage = signal('');
 
   readonly loginForm = this.formBuilder.nonNullable.group({
-    email: ['user@fracto.com', [Validators.required, Validators.email]],
-    password: ['User@123', [Validators.required]]
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]]
   });
 
   readonly registerForm = this.formBuilder.nonNullable.group({
-    firstName: ['Harsh', [Validators.required]],
-    lastName: ['Raj', [Validators.required]],
-    email: ['harsh.raj@example.com', [Validators.required, Validators.email]],
-    password: ['StrongPass@123', [Validators.required, Validators.minLength(8)]],
-    phoneNumber: ['9876543210'],
-    city: ['Bengaluru']
+    firstName: ['', [Validators.required]],
+    lastName: ['', [Validators.required]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    phoneNumber: [''],
+    city: ['']
   });
 
   constructor() {
@@ -365,6 +363,7 @@ export class AuthPageComponent {
   setMode(mode: 'login' | 'register'): void {
     this.mode.set(mode);
     this.errorMessage.set('');
+    this.infoMessage.set('');
   }
 
   useDemo(role: 'admin' | 'user'): void {

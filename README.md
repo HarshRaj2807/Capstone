@@ -21,7 +21,6 @@ On the other side, administrators get a clean way to manage doctors, users, and 
 - [Demo Accounts](#demo-accounts)
 - [Repository Structure](#repository-structure)
 - [Documentation](#documentation)
-- [Project Status](#project-status)
 
 ## Overview
 
@@ -158,19 +157,7 @@ This repository also includes supporting technical documents:
 - [Database_Design.md](/c:/Users/rajha/Wipro/Capstone/database/Database_Design.md)
 - [Fracto_Database.sql](/c:/Users/rajha/Wipro/Capstone/database/Fracto_Database.sql)
 
-## Project Status
-
-Fracto is in a solid runnable state for local development and demo use:
-
-- frontend and backend are implemented
-- authentication is working
-- booking, payment, and confirmation flows are in place
-- Swagger is available for API testing
-- SQL Server configuration is included by default
-- demo accounts are seeded for quick testing
-
 ## Author
 
 **Harsh Raj**  
-**Project:** Fracto - Online Doctor Appointment Booking System  
 **Date:** 20/03/2026

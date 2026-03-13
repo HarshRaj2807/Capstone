@@ -50,7 +50,7 @@ import { UserListItem } from '../../core/models/user.models';
             <form [formGroup]="doctorForm" (ngSubmit)="saveDoctor()">
               <label>
                 Full Name
-                <input type="text" formControlName="fullName" />
+                <input type="text" formControlName="fullName" placeholder="Enter doctor's full name" />
               </label>
 
               <div class="split-fields">
@@ -68,7 +68,7 @@ import { UserListItem } from '../../core/models/user.models';
 
                 <label>
                   City
-                  <input type="text" formControlName="city" />
+                  <input type="text" formControlName="city" placeholder="Enter city" />
                 </label>
               </div>
 
@@ -262,12 +262,12 @@ export class AdminPageComponent implements OnInit {
   readonly doctorForm = this.formBuilder.nonNullable.group({
     fullName: ['', Validators.required],
     specializationId: ['', Validators.required],
-    city: ['Bengaluru', Validators.required],
-    experienceYears: [5, Validators.required],
-    consultationFee: [700, Validators.required],
-    consultationStartTime: ['09:00', Validators.required],
-    consultationEndTime: ['13:00', Validators.required],
-    slotDurationMinutes: [30, Validators.required],
+    city: ['', Validators.required],
+    experienceYears: ['', Validators.required],
+    consultationFee: ['', Validators.required],
+    consultationStartTime: ['', Validators.required],
+    consultationEndTime: ['', Validators.required],
+    slotDurationMinutes: ['', Validators.required],
     profileImagePath: [''],
     isActive: [true]
   });
@@ -307,11 +307,11 @@ export class AdminPageComponent implements OnInit {
       fullName: doctor.fullName,
       specializationId: String(doctor.specializationId),
       city: doctor.city,
-      experienceYears: doctor.experienceYears,
-      consultationFee: doctor.consultationFee,
+      experienceYears: String(doctor.experienceYears),
+      consultationFee: String(doctor.consultationFee),
       consultationStartTime: doctor.consultationStartTime,
       consultationEndTime: doctor.consultationEndTime,
-      slotDurationMinutes: doctor.slotDurationMinutes,
+      slotDurationMinutes: String(doctor.slotDurationMinutes),
       profileImagePath: doctor.profileImagePath ?? '',
       isActive: true
     });
@@ -322,12 +322,12 @@ export class AdminPageComponent implements OnInit {
     this.doctorForm.setValue({
       fullName: '',
       specializationId: '',
-      city: 'Bengaluru',
-      experienceYears: 5,
-      consultationFee: 700,
-      consultationStartTime: '09:00',
-      consultationEndTime: '13:00',
-      slotDurationMinutes: 30,
+      city: '',
+      experienceYears: '',
+      consultationFee: '',
+      consultationStartTime: '',
+      consultationEndTime: '',
+      slotDurationMinutes: '',
       profileImagePath: '',
       isActive: true
     });

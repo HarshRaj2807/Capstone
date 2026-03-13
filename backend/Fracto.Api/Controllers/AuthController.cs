@@ -40,10 +40,10 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
     [HttpPost("profile-image")]
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<object>> UploadProfileImage(
-        [FromForm] IFormFile file,
+        [FromForm] ProfileImageUploadRequestDto request,
         CancellationToken cancellationToken)
     {
-        var path = await authService.UploadProfileImageAsync(User.GetUserId(), file, cancellationToken);
+        var path = await authService.UploadProfileImageAsync(User.GetUserId(), request.File, cancellationToken);
         return Ok(new
         {
             message = "Profile image uploaded successfully.",

@@ -1,0 +1,85 @@
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'reasonForVisit' does not exist on type 'ɵNonNullableFormControls<{ cardholderName: (string | ((control: AbstractControl<any, any, any>) => ValidationErrors | null)[])[]; cardNumber: (string | ((control: AbstractControl<any, any, any>) => ValidationErrors | null)[])[]; expiry: (string | ((control: AbstractControl<...>) => ValidationErrors | null)[])[]; cvv...'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/payment/payment-page.component.ts:77:48:
+[37m      77 │ ...>{{ paymentForm.controls.[32mreasonForVisit[37m.value || 'Add a short n...
+         ╵                             [32m~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2322: Type 'number' is not assignable to type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/admin/admin-page.component.ts:310:6:
+[37m      310 │       [32mexperienceYears[37m: doctor.experienceYears,
+          ╵       [32m~~~~~~~~~~~~~~~[0m
+
+  The expected type comes from property 'experienceYears' which is declared here on type '{ fullName: string; specializationId: string; city: string; experienceYears: string; consultationFee: string; consultationStartTime: string; consultationEndTime: string; slotDurationMinutes: string; profileImagePath: string; isActive: boolean; }'
+
+    src/app/features/admin/admin-page.component.ts:266:4:
+[37m      266 │     [32mexperienceYears: ['', Validators.required][37m,
+          ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2322: Type 'number' is not assignable to type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/admin/admin-page.component.ts:311:6:
+[37m      311 │       [32mconsultationFee[37m: doctor.consultationFee,
+          ╵       [32m~~~~~~~~~~~~~~~[0m
+
+  The expected type comes from property 'consultationFee' which is declared here on type '{ fullName: string; specializationId: string; city: string; experienceYears: string; consultationFee: string; consultationStartTime: string; consultationEndTime: string; slotDurationMinutes: string; profileImagePath: string; isActive: boolean; }'
+
+    src/app/features/admin/admin-page.component.ts:267:4:
+[37m      267 │     [32mconsultationFee: ['', Validators.required][37m,
+          ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2322: Type 'number' is not assignable to type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/admin/admin-page.component.ts:314:6:
+[37m      314 │       [32mslotDurationMinutes[37m: doctor.slotDurationMinutes,
+          ╵       [32m~~~~~~~~~~~~~~~~~~~[0m
+
+  The expected type comes from property 'slotDurationMinutes' which is declared here on type '{ fullName: string; specializationId: string; city: string; experienceYears: string; consultationFee: string; consultationStartTime: string; consultationEndTime: string; slotDurationMinutes: string; profileImagePath: string; isActive: boolean; }'
+
+    src/app/features/admin/admin-page.component.ts:270:4:
+[37m      270 │     [32mslotDurationMinutes: ['', Validators.required][37m,
+          ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2322: Type 'number' is not assignable to type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/admin/admin-page.component.ts:310:6:
+[37m      310 │       [32mexperienceYears[37m: doctor.experienceYears,
+          ╵       [32m~~~~~~~~~~~~~~~[0m
+
+  The expected type comes from property 'experienceYears' which is declared here on type '{ fullName: string; specializationId: string; city: string; experienceYears: string; consultationFee: string; consultationStartTime: string; consultationEndTime: string; slotDurationMinutes: string; profileImagePath: string; isActive: boolean; }'
+
+    src/app/features/admin/admin-page.component.ts:266:4:
+[37m      266 │     [32mexperienceYears: ['', Validators.required][37m,
+          ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2322: Type 'number' is not assignable to type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/admin/admin-page.component.ts:311:6:
+[37m      311 │       [32mconsultationFee[37m: doctor.consultationFee,
+          ╵       [32m~~~~~~~~~~~~~~~[0m
+
+  The expected type comes from property 'consultationFee' which is declared here on type '{ fullName: string; specializationId: string; city: string; experienceYears: string; consultationFee: string; consultationStartTime: string; consultationEndTime: string; slotDurationMinutes: string; profileImagePath: string; isActive: boolean; }'
+
+    src/app/features/admin/admin-page.component.ts:267:4:
+[37m      267 │     [32mconsultationFee: ['', Validators.required][37m,
+          ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2322: Type 'number' is not assignable to type 'string'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/admin/admin-page.component.ts:314:6:
+[37m      314 │       [32mslotDurationMinutes[37m: doctor.slotDurationMinutes,
+          ╵       [32m~~~~~~~~~~~~~~~~~~~[0m
+
+  The expected type comes from property 'slotDurationMinutes' which is declared here on type '{ fullName: string; specializationId: string; city: string; experienceYears: string; consultationFee: string; consultationStartTime: string; consultationEndTime: string; slotDurationMinutes: string; profileImagePath: string; isActive: boolean; }'
+
+    src/app/features/admin/admin-page.component.ts:270:4:
+[37m      270 │     [32mslotDurationMinutes: ['', Validators.required][37m,
+          ╵     [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

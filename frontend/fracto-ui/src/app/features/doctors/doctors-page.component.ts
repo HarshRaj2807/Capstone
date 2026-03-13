@@ -43,10 +43,11 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
         <aside class="filters-card">
           <form [formGroup]="searchForm" (ngSubmit)="searchDoctors()">
             <h2>Search Filters</h2>
+            <p class="form-hint">Leave any field blank if you want broader results.</p>
 
             <label>
               City
-              <input type="text" formControlName="city" placeholder="Bengaluru" />
+              <input type="text" formControlName="city" placeholder="Enter city" />
             </label>
 
             <label>
@@ -257,6 +258,12 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       color: #122926;
     }
 
+    .form-hint {
+      margin: -0.2rem 0 0.2rem;
+      color: #6a6d66;
+      line-height: 1.6;
+    }
+
     label {
       display: grid;
       gap: 0.4rem;
@@ -427,10 +434,10 @@ export class DoctorsPageComponent implements OnInit {
   readonly isAdmin = this.authService.isAdmin;
 
   readonly searchForm = this.formBuilder.nonNullable.group({
-    city: ['Bengaluru'],
+    city: [''],
     specializationId: [''],
     minRating: [''],
-    appointmentDate: [this.getTomorrowDate()]
+    appointmentDate: ['']
   });
 
   ngOnInit(): void {
@@ -454,7 +461,7 @@ export class DoctorsPageComponent implements OnInit {
     const filters = this.searchForm.getRawValue();
     this.doctorService
       .searchDoctors({
-        city: filters.city || undefined,
+        city: filters.city.trim() || undefined,
         specializationId: filters.specializationId ? Number(filters.specializationId) : undefined,
         minRating: filters.minRating ? Number(filters.minRating) : undefined,
         appointmentDate: filters.appointmentDate || undefined,
@@ -475,10 +482,10 @@ export class DoctorsPageComponent implements OnInit {
 
   resetFilters(): void {
     this.searchForm.setValue({
-      city: 'Bengaluru',
+      city: '',
       specializationId: '',
       minRating: '',
-      appointmentDate: this.getTomorrowDate()
+      appointmentDate: ''
     });
 
     this.searchDoctors();
@@ -507,17 +514,10 @@ export class DoctorsPageComponent implements OnInit {
         city: doctor.city,
         consultationFee: doctor.consultationFee,
         appointmentDate,
-        timeSlot: slot,
-        reasonForVisit: `Consultation request for ${doctor.specializationName}`
+        timeSlot: slot
       }
     });
 
     this.bookingDoctorId.set(null);
-  }
-
-  private getTomorrowDate(): string {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().slice(0, 10);
   }
 }

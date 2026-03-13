@@ -65,7 +65,7 @@ import {
               <span><strong>Date:</strong> {{ appointment.appointmentDate }}</span>
               <span><strong>Time:</strong> {{ appointment.timeSlot }}</span>
               <span><strong>Booked For:</strong> {{ appointment.userName }}</span>
-              <span><strong>Reason:</strong> {{ appointment.reasonForVisit || 'General consultation' }}</span>
+              <span><strong>Reason:</strong> {{ appointment.reasonForVisit || 'No reason added' }}</span>
             </div>
 
             @if (appointment.cancellationReason) {
@@ -192,7 +192,7 @@ export class AppointmentsPageComponent implements OnInit {
   }
 
   cancelAppointment(appointment: Appointment): void {
-    const reason = window.prompt('Optional cancellation reason', 'Change of plans') ?? '';
+    const reason = window.prompt('Optional cancellation reason', '') ?? '';
 
     this.appointmentService.cancelAppointment(appointment.appointmentId, reason || undefined).subscribe({
       next: (response) => {
