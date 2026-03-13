@@ -66,7 +66,7 @@ erDiagram
 
     RATINGS {
         int RatingId PK
-        int AppointmentId FK UK
+        int AppointmentId FK, UK
         int UserId FK
         int DoctorId FK
         int RatingValue
