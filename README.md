@@ -130,17 +130,6 @@ README.md
 .gitignore
 ```
 
-## Documentation
-
-The repository also includes supporting technical documents:
-
-- Full Project Report — `documentation/Fracto_Project_Report.md`
-- `documentation/REST_API_Design.md`
-- `documentation/JWT_Authentication_Flow.md`
-- `documentation/ER_Diagram.md`
-- `database/Database_Design.md`
-- `database/Fracto_Database.sql`
-
 ## Author
 
 **Harsh Raj**  
