@@ -1,0 +1,34 @@
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" routerLink="/doctors">
+      <span class="brand-mark">F</span>
+      <span class="brand-copy">
+        <strong>Fracto</strong>
+        <small>Online Doctor Appointment Booking System</small>
+      </span>
+    </a>
+
+    @if (authService.isAuthenticated()) {
+      <nav class="topbar-nav">
+        <a routerLink="/doctors" routerLinkActive="active">Doctors</a>
+        <a routerLink="/appointments" routerLinkActive="active">Appointments</a>
+
+        @if (authService.isAdmin()) {
+          <a routerLink="/admin" routerLinkActive="active">Admin</a>
+        }
+      </nav>
+
+      <div class="topbar-user">
+        <div class="user-copy">
+          <strong>{{ authService.currentUser()?.fullName }}</strong>
+          <small>{{ authService.currentUser()?.role }}</small>
+        </div>
+        <button type="button" (click)="logout()">Logout</button>
+      </div>
+    }
+  </header>
+
+  <main class="page-container">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,121 @@
+:host {
+  display: block;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  backdrop-filter: blur(18px);
+  background: rgba(250, 246, 239, 0.78);
+  border-bottom: 1px solid rgba(15, 59, 53, 0.08);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #0f3b35, #1f6f63);
+  color: #fff;
+  font-weight: 800;
+}
+
+.brand-copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.brand-copy strong {
+  color: #122926;
+  font-size: 1.15rem;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.brand-copy small {
+  color: #6b6357;
+}
+
+.topbar-nav,
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.topbar-nav a {
+  text-decoration: none;
+  color: #38403a;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.topbar-nav a.active {
+  background: #0f3b35;
+  color: #fff;
+}
+
+.user-copy {
+  display: grid;
+  text-align: right;
+}
+
+.user-copy strong {
+  color: #122926;
+}
+
+.user-copy small {
+  color: #6b6357;
+}
+
+.topbar-user button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.8rem 1rem;
+  background: #efe5d7;
+  color: #122926;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.page-container {
+  width: min(1200px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.5rem 0 2.5rem;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar-nav,
+  .topbar-user {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .user-copy {
+    text-align: left;
+  }
+}

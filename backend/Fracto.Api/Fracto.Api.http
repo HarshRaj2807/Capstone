@@ -1,0 +1,16 @@
+@Fracto_Api_HostAddress = http://localhost:5104
+
+GET {{Fracto_Api_HostAddress}}/
+Accept: application/json
+
+###
+
+POST {{Fracto_Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@fracto.com",
+  "password": "Admin@123"
+}
+
+###
