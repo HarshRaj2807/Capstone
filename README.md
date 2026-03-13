@@ -61,7 +61,7 @@ The backend is configured by default for:
 - Server: `.\SQLEXPRESS`
 - Database: `FractoDb`
 
-If your SQL Server setup is different, update the connection settings in [appsettings.json](/c:/Users/rajha/Wipro/Capstone/backend/Fracto.Api/appsettings.json).
+If your SQL Server setup is different, update the connection settings in `backend/Fracto.Api/appsettings.json`.
 
 ### Start the backend
 
@@ -134,12 +134,12 @@ README.md
 
 The repository also includes supporting technical documents:
 
-- [Full Project Report](/c:/Users/rajha/Wipro/Capstone/documentation/Fracto_Project_Report.md)
-- [REST_API_Design.md](/c:/Users/rajha/Wipro/Capstone/documentation/REST_API_Design.md)
-- [JWT_Authentication_Flow.md](/c:/Users/rajha/Wipro/Capstone/documentation/JWT_Authentication_Flow.md)
-- [ER_Diagram.md](/c:/Users/rajha/Wipro/Capstone/documentation/ER_Diagram.md)
-- [Database_Design.md](/c:/Users/rajha/Wipro/Capstone/database/Database_Design.md)
-- [Fracto_Database.sql](/c:/Users/rajha/Wipro/Capstone/database/Fracto_Database.sql)
+- Full Project Report — `documentation/Fracto_Project_Report.md`
+- `documentation/REST_API_Design.md`
+- `documentation/JWT_Authentication_Flow.md`
+- `documentation/ER_Diagram.md`
+- `database/Database_Design.md`
+- `database/Fracto_Database.sql`
 
 ## Author
 

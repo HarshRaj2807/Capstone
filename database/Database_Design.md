@@ -215,4 +215,4 @@ The indexing strategy is designed around the most common system operations:
 
 ## Executable SQL Script
 
-The full SQL Server script is provided in [Fracto_Database.sql](/c:/Users/rajha/Wipro/Capstone/database/Fracto_Database.sql).
+The full SQL Server script is provided in `database/Fracto_Database.sql`.
