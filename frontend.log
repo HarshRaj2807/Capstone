@@ -40,3 +40,5 @@ Page reload sent to client(s).
 Application bundle generation complete. [0.694 seconds] - 2026-03-13T08:17:16.214Z
 
 Page reload sent to client(s).
+[2m1:47:53 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ new dependencies optimized: [33mrxjs/operators[32m[39m
+[2m1:47:53 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32m✨ optimized dependencies changed. reloading[39m
