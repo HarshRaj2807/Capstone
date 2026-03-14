@@ -14,7 +14,7 @@ export interface Doctor {
   consultationEndTime: string;
   slotDurationMinutes: number;
   profileImagePath?: string | null;
-  availableSlots: string[];
+  availableSlots: Array<{ time: string; isAvailable: boolean }>;
 }
 
 export interface Specialization {

@@ -55,7 +55,7 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
 
         var slotLookup = appointmentDate.HasValue
             ? await BuildSlotLookupAsync(doctors, appointmentDate.Value, cancellationToken)
-            : new Dictionary<int, IReadOnlyCollection<string>>();
+            : new Dictionary<int, IReadOnlyCollection<SlotDto>>();
 
         return new PagedResponse<DoctorResponseDto>
         {
@@ -80,7 +80,7 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
             : MapDoctor(doctor);
     }
 
-    public async Task<IReadOnlyCollection<string>> GetAvailableSlotsAsync(int doctorId, DateOnly appointmentDate, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyCollection<SlotDto>> GetAvailableSlotsAsync(int doctorId, DateOnly appointmentDate, CancellationToken cancellationToken = default)
     {
         var doctor = await dbContext.Doctors
             .AsNoTracking()
@@ -215,12 +215,12 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
         }
     }
 
-    private async Task<Dictionary<int, IReadOnlyCollection<string>>> BuildSlotLookupAsync(
+    private async Task<Dictionary<int, IReadOnlyCollection<SlotDto>>> BuildSlotLookupAsync(
         IReadOnlyCollection<Doctor> doctors,
         DateOnly appointmentDate,
         CancellationToken cancellationToken)
     {
-        var result = new Dictionary<int, IReadOnlyCollection<string>>();
+        var result = new Dictionary<int, IReadOnlyCollection<SlotDto>>();
 
         foreach (var doctor in doctors)
         {
@@ -230,7 +230,7 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
         return result;
     }
 
-    private async Task<IReadOnlyCollection<string>> BuildSlotsAsync(
+    private async Task<IReadOnlyCollection<SlotDto>> BuildSlotsAsync(
         Doctor doctor,
         DateOnly appointmentDate,
         CancellationToken cancellationToken)
@@ -245,16 +245,15 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
             .ToListAsync(cancellationToken);
 
         var occupiedSlots = takenSlots.ToHashSet();
-        var slots = new List<string>();
+        var slots = new List<SlotDto>();
         var currentSlot = doctor.ConsultationStartTime;
 
         // Generate all valid time slots from the doctor's configured working window.
         while (currentSlot < doctor.ConsultationEndTime)
         {
-            if (!occupiedSlots.Contains(currentSlot))
-            {
-                slots.Add(currentSlot.ToString("HH:mm"));
-            }
+            var timeStr = currentSlot.ToString("HH:mm");
+            var isAvailable = !occupiedSlots.Contains(currentSlot);
+            slots.Add(new SlotDto(timeStr, isAvailable));
 
             currentSlot = currentSlot.AddMinutes(doctor.SlotDurationMinutes);
         }
@@ -262,7 +261,7 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
         return slots;
     }
 
-    private static DoctorResponseDto MapDoctor(Doctor doctor, IReadOnlyCollection<string>? availableSlots = null) =>
+    private static DoctorResponseDto MapDoctor(Doctor doctor, IReadOnlyCollection<SlotDto>? availableSlots = null) =>
         new()
         {
             DoctorId = doctor.DoctorId,
@@ -278,6 +277,6 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
             ConsultationEndTime = doctor.ConsultationEndTime.ToString("HH:mm"),
             SlotDurationMinutes = doctor.SlotDurationMinutes,
             ProfileImagePath = doctor.ProfileImagePath,
-            AvailableSlots = availableSlots ?? Array.Empty<string>()
+            AvailableSlots = availableSlots ?? Array.Empty<SlotDto>()
         };
 }

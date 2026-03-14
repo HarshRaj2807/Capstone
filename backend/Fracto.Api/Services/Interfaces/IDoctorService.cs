@@ -17,7 +17,7 @@ public interface IDoctorService
 
     Task<DoctorResponseDto> GetDoctorByIdAsync(int doctorId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<string>> GetAvailableSlotsAsync(int doctorId, DateOnly appointmentDate, CancellationToken cancellationToken = default);
+    Task<IReadOnlyCollection<SlotDto>> GetAvailableSlotsAsync(int doctorId, DateOnly appointmentDate, CancellationToken cancellationToken = default);
 
     Task<DoctorResponseDto> CreateDoctorAsync(DoctorUpsertDto request, CancellationToken cancellationToken = default);
 

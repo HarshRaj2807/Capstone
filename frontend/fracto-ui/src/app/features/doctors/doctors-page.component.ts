@@ -127,12 +127,13 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
                   </p>
                 } @else {
                   <div class="slots-grid">
-                    @for (slot of doctor.availableSlots; track slot) {
+                    @for (slot of doctor.availableSlots; track slot.time) {
                       <button
                         type="button"
-                        [disabled]="bookingDoctorId() === doctor.doctorId"
-                        (click)="bookSlot(doctor, slot)">
-                        {{ slot }}
+                        [disabled]="bookingDoctorId() === doctor.doctorId || !slot.isAvailable"
+                        [class.booked]="!slot.isAvailable"
+                        (click)="bookSlot(doctor, slot.time)">
+                        {{ slot.time }}
                       </button>
                     }
                   </div>
@@ -161,10 +162,11 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       align-items: end;
       padding: 1.5rem 1.75rem;
       border-radius: 1.75rem;
-      background:
-        radial-gradient(circle at top right, rgba(221, 110, 66, 0.18), transparent 28%),
-        linear-gradient(135deg, #f8f2e8, #efe5d7);
-      border: 1px solid rgba(15, 59, 53, 0.12);
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     }
 
     .eyebrow {
@@ -172,20 +174,22 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       text-transform: uppercase;
       letter-spacing: 0.18em;
       font-size: 0.76rem;
-      color: #8b4a2d;
+      color: #a1a1a6;
     }
 
     h1 {
       margin: 0;
       font-size: clamp(2rem, 4vw, 3.2rem);
-      font-family: Georgia, 'Times New Roman', serif;
-      color: #122926;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #1d1d1f;
     }
 
     .page-header p:not(.eyebrow) {
       max-width: 44rem;
       margin: 0.8rem 0 0;
-      color: #5f6058;
+      color: #8e8e93;
       line-height: 1.7;
     }
 
@@ -198,16 +202,28 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
     .ghost-link {
       text-decoration: none;
       border-radius: 999px;
-      padding: 0.9rem 1.2rem;
-      border: 1px solid rgba(15, 59, 53, 0.16);
-      color: #122926;
-      font-weight: 700;
-      background: rgba(255, 255, 255, 0.45);
+      padding: 0.8rem 1.2rem;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      color: #1d1d1f;
+      font-weight: 600;
+      font-size: 0.95rem;
+      background: rgba(255, 255, 255, 0.6);
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+    
+    .ghost-link:hover {
+      background: rgba(255, 255, 255, 0.9);
+      transform: scale(1.02);
     }
 
     .ghost-link.accent {
-      background: #0f3b35;
+      background: #1d1d1f;
       color: #fff;
+      border: none;
+    }
+    
+    .ghost-link.accent:hover {
+      background: #ffffff;
     }
 
     .feedback {
@@ -236,9 +252,11 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
     .doctor-card,
     .empty-state {
       border-radius: 1.5rem;
-      border: 1px solid rgba(15, 59, 53, 0.12);
-      background: rgba(255, 255, 255, 0.88);
-      box-shadow: 0 18px 40px rgba(18, 41, 38, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
     }
 
     .filters-card {
@@ -254,30 +272,47 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
 
     form h2 {
       margin: 0;
-      font-family: Georgia, 'Times New Roman', serif;
-      color: #122926;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      font-weight: 600;
+      color: #1d1d1f;
     }
 
     .form-hint {
       margin: -0.2rem 0 0.2rem;
-      color: #6a6d66;
+      color: #8e8e93;
       line-height: 1.6;
+      font-size: 0.9rem;
     }
 
     label {
       display: grid;
       gap: 0.4rem;
-      color: #424740;
-      font-weight: 600;
+      color: #424245;
+      font-weight: 500;
+      font-size: 0.95rem;
     }
 
     input,
     select {
       border-radius: 1rem;
-      border: 1px solid #d9d1c3;
+      border: 1px solid rgba(0, 0, 0, 0.1);
       padding: 0.9rem 1rem;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.6);
+      color: #1d1d1f;
       font: inherit;
+      transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: rgba(0, 102, 204, 0.5);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+    
+    input::placeholder {
+      color: #8e8e93;
     }
 
     .filter-actions {
@@ -291,17 +326,28 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       border-radius: 1rem;
       padding: 0.95rem 1rem;
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 600;
+      transition: transform 0.2s ease, background 0.2s ease;
     }
 
     .filter-actions button {
-      background: linear-gradient(135deg, #0f3b35, #1f6f63);
+      background: #1d1d1f;
       color: #fff;
+    }
+    
+    .filter-actions button:hover:not([disabled]) {
+      transform: scale(1.02);
+      background: #000;
     }
 
     .filter-actions button.secondary {
-      background: #efe5d7;
-      color: #122926;
+      background: rgba(0, 0, 0, 0.04);
+      color: #1d1d1f;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-actions button.secondary:hover {
+      background: rgba(0, 0, 0, 0.08);
     }
 
     .results-grid {
@@ -324,27 +370,32 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
 
     .specialization {
       margin: 0;
-      color: #8b4a2d;
+      color: #a1a1a6;
       text-transform: uppercase;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.12em;
       font-size: 0.75rem;
+      font-weight: 600;
     }
 
     .doctor-card h3,
     .empty-state h3 {
       margin: 0.35rem 0 0;
       font-size: 1.4rem;
-      color: #122926;
-      font-family: Georgia, 'Times New Roman', serif;
+      color: #1d1d1f;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      font-weight: 600;
+      letter-spacing: -0.01em;
     }
 
     .rating-chip {
       white-space: nowrap;
       border-radius: 999px;
-      padding: 0.55rem 0.8rem;
-      background: #efe5d7;
-      color: #122926;
-      font-weight: 700;
+      padding: 0.5rem 0.8rem;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      color: #1d1d1f;
+      font-weight: 600;
+      font-size: 0.85rem;
     }
 
     .meta-grid {
@@ -352,18 +403,20 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 0.65rem;
       margin: 1rem 0;
-      color: #5f6058;
+      color: #8e8e93;
+      font-size: 0.95rem;
     }
 
     .schedule {
       margin: 0 0 1rem;
-      color: #38403a;
-      font-weight: 600;
+      color: #424245;
+      font-weight: 500;
+      font-size: 0.95rem;
     }
 
     .slots-block {
       padding-top: 1rem;
-      border-top: 1px solid rgba(15, 59, 53, 0.08);
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
     }
 
     .slots-heading {
@@ -371,7 +424,8 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       justify-content: space-between;
       gap: 1rem;
       margin-bottom: 0.85rem;
-      color: #122926;
+      color: #1d1d1f;
+      font-size: 0.95rem;
     }
 
     .slots-grid {
@@ -381,19 +435,31 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
     }
 
     .slots-grid button {
-      background: #e5f5ee;
-      color: #0f6a4f;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      color: #1d1d1f;
+      padding: 0.6rem 1rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
     }
 
-    .slots-grid button:hover {
-      background: #0f6a4f;
-      color: #fff;
+    .slots-grid button:hover:not([disabled]) {
+      background: rgba(0, 0, 0, 0.1);
+      transform: scale(1.05);
+    }
+    
+    .slots-grid button.booked {
+      opacity: 0.5;
+      background: rgba(0, 0, 0, 0.02);
+      cursor: not-allowed;
+      text-decoration: line-through;
     }
 
     .empty-slots {
       margin: 0;
-      color: #6a6d66;
+      color: #8e8e93;
       line-height: 1.6;
+      font-size: 0.95rem;
     }
 
     @media (max-width: 1100px) {

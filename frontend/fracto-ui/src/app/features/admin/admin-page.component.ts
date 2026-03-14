@@ -173,7 +173,12 @@ import { UserListItem } from '../../core/models/user.models';
                     (input)="updateAppointmentDraft(appointment.appointmentId, 'cancellationReason', $any($event.target).value)"
                     placeholder="Cancellation reason (optional)" />
 
-                  <button type="button" (click)="saveAppointmentStatus(appointment.appointmentId)">Save</button>
+                  <div class="item-actions">
+                    @if (appointment.status === 'Booked') {
+                      <button type="button" class="confirm-btn" (click)="quickConfirm(appointment.appointmentId)">Confirm</button>
+                    }
+                    <button type="button" (click)="saveAppointmentStatus(appointment.appointmentId)">Update</button>
+                  </div>
                 </div>
               </div>
             }
@@ -209,34 +214,42 @@ import { UserListItem } from '../../core/models/user.models';
   styles: [`
     :host { display: block; }
     .page-shell { display: grid; gap: 1.5rem; }
-    .page-header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; padding: 1.5rem 1.75rem; border-radius: 1.75rem; background: radial-gradient(circle at top right, rgba(31, 111, 99, 0.16), transparent 30%), linear-gradient(135deg, #122926, #1f4c46); color: #f8f2e8; }
-    .eyebrow { margin: 0 0 0.65rem; text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.76rem; color: #f0c4ab; }
-    h1, h2, h3 { margin: 0; font-family: Georgia, 'Times New Roman', serif; }
+    .page-header { display: flex; justify-content: space-between; gap: 1rem; align-items: end; padding: 1.5rem 1.75rem; border-radius: 1.75rem; background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); }
+    .eyebrow { margin: 0 0 0.65rem; text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.76rem; color: #86868b; }
+    h1, h2, h3 { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; font-weight: 600; color: #1d1d1f; letter-spacing: -0.01em; }
     .tab-switcher { display: flex; flex-wrap: wrap; gap: 0.6rem; }
-    .tab-switcher button, .list-item button, form button, .secondary, .danger { border: none; border-radius: 1rem; padding: 0.9rem 1rem; font-weight: 700; cursor: pointer; }
-    .tab-switcher button { background: rgba(255, 255, 255, 0.12); color: #f8f2e8; }
-    .tab-switcher button.active { background: #f8f2e8; color: #122926; }
+    .tab-switcher button, .list-item button, form button, .secondary, .danger { border: none; border-radius: 1rem; padding: 0.9rem 1rem; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, background 0.2s ease; }
+    .tab-switcher button { background: rgba(0, 0, 0, 0.04); border: 1px solid rgba(0, 0, 0, 0.1); color: #86868b; }
+    .tab-switcher button.active { background: rgba(0, 0, 0, 0.08); color: #1d1d1f; border-color: rgba(0, 0, 0, 0.2); }
+    .tab-switcher button:hover:not(.active) { background: rgba(0, 0, 0, 0.06); color: #1d1d1f; }
     .feedback { border-radius: 1rem; padding: 0.95rem 1rem; }
     .feedback.error { background: #fde8df; color: #8c2f17; }
     .feedback.success { background: #e5f5ee; color: #0f6a4f; }
     .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
-    .form-card, .list-card { border-radius: 1.5rem; border: 1px solid rgba(15, 59, 53, 0.12); background: rgba(255, 255, 255, 0.9); box-shadow: 0 18px 40px rgba(18, 41, 38, 0.08); padding: 1.5rem; }
-    .section-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-bottom: 1rem; color: #122926; }
+    .form-card, .list-card { border-radius: 1.5rem; border: 1px solid rgba(0, 0, 0, 0.08); background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05); padding: 1.5rem; }
+    .section-heading span { color: #86868b; font-size: 0.95rem; }
     form, .list-stack { display: grid; gap: 1rem; }
-    label { display: grid; gap: 0.4rem; color: #424740; font-weight: 600; }
-    input, select { border-radius: 1rem; border: 1px solid #d9d1c3; padding: 0.9rem 1rem; font: inherit; background: #fff; }
+    label { display: grid; gap: 0.4rem; color: #424245; font-weight: 500; font-size: 0.95rem; }
+    input, select { border-radius: 1rem; border: 1px solid rgba(0, 0, 0, 0.1); padding: 0.9rem 1rem; font: inherit; background: rgba(255, 255, 255, 0.6); color: #1d1d1f; transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; }
+    input:focus, select:focus { outline: none; border-color: rgba(0, 102, 204, 0.5); background: rgba(255, 255, 255, 0.9); box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1); }
     .split-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     .checkbox { display: flex; align-items: center; gap: 0.6rem; }
     .checkbox input { width: auto; margin: 0; }
-    form button { background: linear-gradient(135deg, #0f3b35, #1f6f63); color: #fff; }
-    .secondary { background: #efe5d7; color: #122926; }
-    .danger { background: #fde8df; color: #8c2f17; }
-    .list-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem 1.1rem; border-radius: 1.1rem; background: #faf6ef; border: 1px solid rgba(15, 59, 53, 0.08); }
-    .list-item p { margin: 0.35rem 0 0; color: #5f6058; }
+    form button { background: #1d1d1f; color: #fff; }
+    form button:hover:not([disabled]) { background: #000; transform: scale(1.02); }
+    .secondary { background: rgba(0, 0, 0, 0.04); color: #1d1d1f; border: 1px solid rgba(0, 0, 0, 0.1); }
+    .secondary:hover { background: rgba(0, 0, 0, 0.08); }
+    .danger { background: rgba(255, 69, 58, 0.1); color: #d70015; border: 1px solid rgba(255, 69, 58, 0.2); }
+    .danger:hover { background: rgba(255, 69, 58, 0.15); }
+    .list-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 1rem 1.1rem; border-radius: 1.1rem; background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.06); }
+    .list-item p { margin: 0.35rem 0 0; color: #86868b; font-size: 0.9rem; }
     .item-actions, .status-editor { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
     .status-editor { width: min(100%, 32rem); justify-content: end; }
     .status-editor input, .status-editor select { min-width: 11rem; }
-    .status-editor button { background: #0f3b35; color: #fff; }
+    .status-editor button { background: rgba(0, 0, 0, 0.04); color: #1d1d1f; border: 1px solid rgba(0, 0, 0, 0.1); }
+    .status-editor button:hover { background: rgba(0, 0, 0, 0.08); transform: scale(1.02); }
+    .status-editor .confirm-btn { background: #1d1d1f; color: #fff; border: none; }
+    .status-editor .confirm-btn:hover { background: #000; }
     .wide { align-items: start; }
     @media (max-width: 1080px) { .admin-grid { grid-template-columns: 1fr; } }
     @media (max-width: 860px) { .page-header, .list-item, .split-fields { grid-template-columns: 1fr; display: grid; } .status-editor { justify-content: stretch; width: 100%; } }
@@ -417,6 +430,21 @@ export class AdminPageComponent implements OnInit {
         },
         error: (error) =>
           this.errorMessage.set(error.error?.message ?? 'Unable to update the appointment status.')
+      });
+  }
+
+  quickConfirm(appointmentId: number): void {
+    this.appointmentService
+      .updateAppointmentStatus(appointmentId, {
+        status: 'Confirmed'
+      })
+      .subscribe({
+        next: () => {
+          this.message.set('Appointment confirmed successfully.');
+          this.loadDashboard();
+        },
+        error: (error) =>
+          this.errorMessage.set(error.error?.message ?? 'Unable to confirm the appointment.')
       });
   }
 

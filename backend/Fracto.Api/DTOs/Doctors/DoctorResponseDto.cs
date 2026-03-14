@@ -28,5 +28,7 @@ public sealed class DoctorResponseDto
 
     public string? ProfileImagePath { get; set; }
 
-    public IReadOnlyCollection<string> AvailableSlots { get; set; } = Array.Empty<string>();
+    public IReadOnlyCollection<SlotDto> AvailableSlots { get; set; } = Array.Empty<SlotDto>();
 }
+
+public record SlotDto(string Time, bool IsAvailable);

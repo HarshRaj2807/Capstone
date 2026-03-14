@@ -15,9 +15,11 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.5rem;
-  backdrop-filter: blur(18px);
-  background: rgba(250, 246, 239, 0.78);
-  border-bottom: 1px solid rgba(15, 59, 53, 0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.45);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .brand {
@@ -33,10 +35,12 @@
   place-items: center;
   width: 2.6rem;
   height: 2.6rem;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, #0f3b35, #1f6f63);
-  color: #fff;
-  font-weight: 800;
+  border-radius: 0.8rem;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1d1d1f;
+  font-weight: 700;
+  font-size: 1.2rem;
 }
 
 .brand-copy {
@@ -45,13 +49,16 @@
 }
 
 .brand-copy strong {
-  color: #122926;
+  color: #1d1d1f;
   font-size: 1.15rem;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .brand-copy small {
-  color: #6b6357;
+  color: #8e8e93;
+  font-size: 0.8rem;
 }
 
 .topbar-nav,
@@ -63,15 +70,22 @@
 
 .topbar-nav a {
   text-decoration: none;
-  color: #38403a;
-  padding: 0.75rem 1rem;
+  color: #86868b;
+  padding: 0.6rem 1.1rem;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.topbar-nav a:hover {
+  color: #1d1d1f;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .topbar-nav a.active {
-  background: #0f3b35;
-  color: #fff;
+  background: rgba(0, 0, 0, 0.08);
+  color: #1d1d1f;
 }
 
 .user-copy {
@@ -80,21 +94,31 @@
 }
 
 .user-copy strong {
-  color: #122926;
+  color: #1d1d1f;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
 .user-copy small {
-  color: #6b6357;
+  color: #8e8e93;
+  font-size: 0.8rem;
 }
 
 .topbar-user button {
-  border: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 999px;
-  padding: 0.8rem 1rem;
-  background: #efe5d7;
-  color: #122926;
-  font-weight: 700;
+  padding: 0.6rem 1.2rem;
+  background: rgba(0, 0, 0, 0.04);
+  color: #1d1d1f;
+  font-weight: 600;
   cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.topbar-user button:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.2);
 }
 
 .page-container {
