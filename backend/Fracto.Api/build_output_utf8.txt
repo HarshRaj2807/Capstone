@@ -1,0 +1,11 @@
+﻿  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Users\rajha\Wipro\Capstone\backend\Fracto.Api\TestBackend.cs(5,7): error CS0260: Missing partial modifier on declaration of type 'Program'; another partial declaration of this type exists [C:\Users\rajha\Wipro\Capstone\backend\Fracto.Api\Fracto.Api.csproj]
+
+Build FAILED.
+
+C:\Users\rajha\Wipro\Capstone\backend\Fracto.Api\TestBackend.cs(5,7): error CS0260: Missing partial modifier on declaration of type 'Program'; another partial declaration of this type exists [C:\Users\rajha\Wipro\Capstone\backend\Fracto.Api\Fracto.Api.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:05.59

@@ -51,7 +51,7 @@ public sealed class DoctorsController(IDoctorService doctorService) : Controller
     }
 
     [HttpGet("{id:int}/available-slots")]
-    public async Task<ActionResult<IReadOnlyCollection<string>>> GetAvailableSlots(
+    public async Task<ActionResult<IReadOnlyCollection<SlotDto>>> GetAvailableSlots(
         int id,
         [FromQuery] DateOnly date,
         CancellationToken cancellationToken)

@@ -101,11 +101,6 @@ import { UserListItem } from '../../core/models/user.models';
                   Slot Duration (minutes)
                   <input type="number" formControlName="slotDurationMinutes" />
                 </label>
-
-                <label>
-                  Profile Image Path
-                  <input type="text" formControlName="profileImagePath" placeholder="/uploads/doctors/image.png" />
-                </label>
               </div>
 
               <label class="checkbox">
@@ -281,7 +276,6 @@ export class AdminPageComponent implements OnInit {
     consultationStartTime: ['', Validators.required],
     consultationEndTime: ['', Validators.required],
     slotDurationMinutes: ['', Validators.required],
-    profileImagePath: [''],
     isActive: [true]
   });
 
@@ -325,7 +319,6 @@ export class AdminPageComponent implements OnInit {
       consultationStartTime: doctor.consultationStartTime,
       consultationEndTime: doctor.consultationEndTime,
       slotDurationMinutes: String(doctor.slotDurationMinutes),
-      profileImagePath: doctor.profileImagePath ?? '',
       isActive: true
     });
   }
@@ -341,7 +334,6 @@ export class AdminPageComponent implements OnInit {
       consultationStartTime: '',
       consultationEndTime: '',
       slotDurationMinutes: '',
-      profileImagePath: '',
       isActive: true
     });
   }
@@ -362,7 +354,6 @@ export class AdminPageComponent implements OnInit {
       consultationStartTime: rawValue.consultationStartTime,
       consultationEndTime: rawValue.consultationEndTime,
       slotDurationMinutes: Number(rawValue.slotDurationMinutes),
-      profileImagePath: rawValue.profileImagePath || null,
       isActive: rawValue.isActive
     };
 

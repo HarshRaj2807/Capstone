@@ -40,8 +40,7 @@ public sealed class AppointmentService(FractoDbContext dbContext) : IAppointment
 
         var totalRecords = await query.CountAsync(cancellationToken);
         var appointments = await query
-            .OrderByDescending(appointment => appointment.AppointmentDate)
-            .ThenBy(appointment => appointment.TimeSlot)
+            .OrderByDescending(appointment => appointment.BookedAtUtc)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

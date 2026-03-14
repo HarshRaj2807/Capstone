@@ -12,6 +12,12 @@ export const routes: Routes = [
   { path: 'login', component: AuthPageComponent },
   { path: 'register', component: AuthPageComponent, data: { mode: 'register' } },
   { path: 'doctors', component: DoctorsPageComponent, canActivate: [authGuard] },
+  {
+    path: 'doctors/:id/reviews',
+    loadComponent: () =>
+      import('./features/doctors/doctor-reviews-page.component').then((m) => m.DoctorReviewsPageComponent),
+    canActivate: [authGuard]
+  },
   { path: 'payment', component: PaymentPageComponent, canActivate: [authGuard] },
   { path: 'appointments', component: AppointmentsPageComponent, canActivate: [authGuard] },
   { path: 'admin', component: AdminPageComponent, canActivate: [adminGuard] },

@@ -101,14 +101,18 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
                   <p class="specialization">{{ doctor.specializationName }}</p>
                   <h3>{{ doctor.fullName }}</h3>
                 </div>
-                <span class="rating-chip">{{ doctor.averageRating | number: '1.1-1' }} / 5</span>
+                <a [routerLink]="['/doctors', doctor.doctorId, 'reviews']" class="rating-chip">
+                  {{ doctor.averageRating | number: '1.1-1' }} / 5
+                </a>
               </div>
-
+ 
               <div class="meta-grid">
                 <span>{{ doctor.city }}</span>
                 <span>{{ doctor.experienceYears }} years experience</span>
                 <span>{{ doctor.consultationFee | currency: 'INR':'symbol':'1.0-0' }}</span>
-                <span>{{ doctor.totalReviews }} reviews</span>
+                <a [routerLink]="['/doctors', doctor.doctorId, 'reviews']" class="reviews-link">
+                  {{ doctor.totalReviews }} reviews
+                </a>
               </div>
 
               <p class="schedule">
@@ -398,6 +402,11 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       font-size: 0.85rem;
     }
 
+    .rating-chip:hover {
+      background: rgba(0, 0, 0, 0.08);
+      transform: scale(1.05);
+    }
+
     .meta-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -460,6 +469,18 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       color: #8e8e93;
       line-height: 1.6;
       font-size: 0.95rem;
+    }
+
+    .reviews-link {
+      color: #0066cc;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .reviews-link:hover {
+      color: #004499;
+      text-decoration: underline;
     }
 
     @media (max-width: 1100px) {

@@ -63,4 +63,8 @@ export class DoctorService {
   getDoctorRatings(doctorId: number): Observable<DoctorRatingsResponse> {
     return this.http.get<DoctorRatingsResponse>(`${API_BASE_URL}/doctors/${doctorId}/ratings`);
   }
+
+  getDoctorById(doctorId: number): Observable<Doctor> {
+    return this.http.get<Doctor>(`${API_BASE_URL}/doctors/${doctorId}`);
+  }
 }
