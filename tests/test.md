@@ -1,7 +1,6 @@
 # Fracto Testing Documentation
 
-This directory contains the automated test suites for the Fracto application. Adding this file prevents GitHub from collapsing the `tests/` directory.
-
+This directory contains the automated test suites for the Fracto application. 
 ## Backend Tests (`Fracto.Api.Tests`)
 
 The backend tests are written using **xUnit** and leverage **SQLite in-memory databases** to ensure fast and isolated test runs.
