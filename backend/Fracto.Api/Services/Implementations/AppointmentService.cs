@@ -8,205 +8,224 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fracto.Api.Services.Implementations;
 
-public sealed class AppointmentService(FractoDbContext dbContext) : IAppointmentService
+public sealed class AppointmentService(FractoDbContext databaseContext) : IAppointmentService
 {
     public async Task<PagedResponse<AppointmentResponseDto>> GetAppointmentsAsync(
         int userId,
-        UserRole role,
-        string? status,
-        int pageNumber,
-        int pageSize,
-        CancellationToken cancellationToken = default)
+        UserRole userRole,
+        string? statusFilter,
+        int pageIndex,
+        int resultsPerPage,
+        CancellationToken cancelToken = default)
     {
-        pageNumber = Math.Max(pageNumber, 1);
-        pageSize = Math.Clamp(pageSize, 1, 50);
+        // Ensure pagination parameters fall within sensible bounds.
+        pageIndex = Math.Max(pageIndex, 1);
+        resultsPerPage = Math.Clamp(resultsPerPage, 1, 50);
 
-        var query = dbContext.Appointments
+        var queryableAppointments = databaseContext.Appointments
             .AsNoTracking()
-            .Include(appointment => appointment.User)
-            .Include(appointment => appointment.Doctor)
-            .Include(appointment => appointment.Rating)
+            .Include(a => a.User)
+            .Include(a => a.Doctor)
+            .Include(a => a.Rating)
             .AsQueryable();
 
-        if (role != UserRole.Admin)
+        // If the user isn't an administrator, restrict results to their own bookings.
+        if (userRole != UserRole.Admin)
         {
-            query = query.Where(appointment => appointment.UserId == userId);
+            queryableAppointments = queryableAppointments.Where(a => a.UserId == userId);
         }
 
-        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<AppointmentStatus>(status, true, out var parsedStatus))
+        // Apply status filtering if a valid status string is provided.
+        if (!string.IsNullOrWhiteSpace(statusFilter) && Enum.TryParse<AppointmentStatus>(statusFilter, true, out var currentStatus))
         {
-            query = query.Where(appointment => appointment.Status == parsedStatus);
+            queryableAppointments = queryableAppointments.Where(a => a.Status == currentStatus);
         }
 
-        var totalRecords = await query.CountAsync(cancellationToken);
-        var appointments = await query
-            .OrderByDescending(appointment => appointment.BookedAtUtc)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
+        var totalCount = await queryableAppointments.CountAsync(cancelToken);
+        var pagedResults = await queryableAppointments
+            .OrderByDescending(a => a.BookedAtUtc)
+            .Skip((pageIndex - 1) * resultsPerPage)
+            .Take(resultsPerPage)
+            .ToListAsync(cancelToken);
 
         return new PagedResponse<AppointmentResponseDto>
         {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            TotalRecords = totalRecords,
-            Items = appointments.Select(MapAppointment).ToArray()
+            PageNumber = pageIndex,
+            PageSize = resultsPerPage,
+            TotalRecords = totalCount,
+            Items = pagedResults.Select(entry => TransformToDto(entry)).ToArray()
         };
     }
 
     public async Task<AppointmentResponseDto> BookAppointmentAsync(
         int userId,
-        BookAppointmentRequestDto request,
-        CancellationToken cancellationToken = default)
+        BookAppointmentRequestDto bookingRequest,
+        CancellationToken cancelToken = default)
     {
-        var doctor = await dbContext.Doctors
+        var targetDoctor = await databaseContext.Doctors
             .AsNoTracking()
-            .FirstOrDefaultAsync(currentDoctor => currentDoctor.DoctorId == request.DoctorId && currentDoctor.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(d => d.DoctorId == bookingRequest.DoctorId && d.IsActive, cancelToken);
 
-        if (doctor is null)
+        if (targetDoctor is null)
         {
-            throw new NotFoundException("Doctor not found.");
+            throw new NotFoundException("The requested medical practitioner could not be found.");
         }
 
-        if (request.AppointmentDate < DateOnly.FromDateTime(DateTime.Now))
+        // Validate that the appointment date is not in the past.
+        if (bookingRequest.AppointmentDate < DateOnly.FromDateTime(DateTime.Now))
         {
-            throw new ValidationException("Appointment date cannot be in the past.");
+            throw new ValidationException("Selected date must be in the future.");
         }
 
-        if (!TimeOnly.TryParse(request.TimeSlot, out var requestedSlot))
+        if (!TimeOnly.TryParse(bookingRequest.TimeSlot, out var parsedTimeSlot))
         {
-            throw new ValidationException("Time slot format is invalid.");
+            throw new ValidationException("The provided time slot format is not recognized.");
         }
 
-        if (requestedSlot < doctor.ConsultationStartTime || requestedSlot >= doctor.ConsultationEndTime)
+        // Verify the requested time falls within the doctor's available hours.
+        if (parsedTimeSlot < targetDoctor.ConsultationStartTime || parsedTimeSlot >= targetDoctor.ConsultationEndTime)
         {
-            throw new ValidationException("Selected slot is outside the doctor's consultation hours.");
+            throw new ValidationException("This time slot is outside of the doctor's practicing hours.");
         }
 
-        var minutesFromStart = (requestedSlot.ToTimeSpan() - doctor.ConsultationStartTime.ToTimeSpan()).TotalMinutes;
-        if (minutesFromStart % doctor.SlotDurationMinutes != 0)
+        var gapFromStart = (parsedTimeSlot.ToTimeSpan() - targetDoctor.ConsultationStartTime.ToTimeSpan()).TotalMinutes;
+        if (gapFromStart % targetDoctor.SlotDurationMinutes != 0)
         {
-            throw new ValidationException("Selected slot does not align with the doctor's schedule.");
+            throw new ValidationException("The selected time does not align with the professional's schedule intervals.");
         }
 
-        var slotIsTaken = await dbContext.Appointments.AnyAsync(
-            appointment =>
-                appointment.DoctorId == request.DoctorId &&
-                appointment.AppointmentDate == request.AppointmentDate &&
-                appointment.TimeSlot == requestedSlot &&
-                appointment.Status != AppointmentStatus.Cancelled,
-            cancellationToken);
+        // Check if another appointment already occupies this specific slot.
+        var isSlotOccupied = await databaseContext.Appointments.AnyAsync(
+            a =>
+                a.DoctorId == bookingRequest.DoctorId &&
+                a.AppointmentDate == bookingRequest.AppointmentDate &&
+                a.TimeSlot == parsedTimeSlot &&
+                a.Status != AppointmentStatus.Cancelled,
+            cancelToken);
 
-        if (slotIsTaken)
+        if (isSlotOccupied)
         {
-            throw new ConflictException("Selected time slot is no longer available.");
+            throw new ConflictException("The chosen time slot has already been reserved by another patient.");
         }
 
-        var appointment = new Appointment
+        var newAppointmentEntry = new Appointment
         {
             UserId = userId,
-            DoctorId = request.DoctorId,
-            AppointmentDate = request.AppointmentDate,
-            TimeSlot = requestedSlot,
-            ReasonForVisit = request.ReasonForVisit?.Trim(),
+            DoctorId = bookingRequest.DoctorId,
+            AppointmentDate = bookingRequest.AppointmentDate,
+            TimeSlot = parsedTimeSlot,
+            ReasonForVisit = bookingRequest.ReasonForVisit?.Trim(),
             Status = AppointmentStatus.Booked,
             BookedAtUtc = DateTime.UtcNow
         };
 
-        dbContext.Appointments.Add(appointment);
-        await dbContext.SaveChangesAsync(cancellationToken);
+        databaseContext.Appointments.Add(newAppointmentEntry);
+        await databaseContext.SaveChangesAsync(cancelToken);
 
-        var savedAppointment = await dbContext.Appointments
+        var finalizedEntry = await databaseContext.Appointments
             .AsNoTracking()
-            .Include(currentAppointment => currentAppointment.User)
-            .Include(currentAppointment => currentAppointment.Doctor)
-            .Include(currentAppointment => currentAppointment.Rating)
-            .FirstAsync(currentAppointment => currentAppointment.AppointmentId == appointment.AppointmentId, cancellationToken);
+            .Include(a => a.User)
+            .Include(a => a.Doctor)
+            .Include(a => a.Rating)
+            .FirstAsync(a => a.AppointmentId == newAppointmentEntry.AppointmentId, cancelToken);
 
-        return MapAppointment(savedAppointment);
+        return TransformToDto(finalizedEntry);
     }
 
     public async Task CancelAppointmentAsync(
         int appointmentId,
-        int userId,
-        UserRole role,
-        string? cancellationReason,
-        CancellationToken cancellationToken = default)
+        int currentUserId,
+        UserRole currentUserRole,
+        string? reasonForCancellation,
+        CancellationToken cancelToken = default)
     {
-        var appointment = await dbContext.Appointments.FirstOrDefaultAsync(
-            currentAppointment => currentAppointment.AppointmentId == appointmentId,
-            cancellationToken);
+        var recordToCancel = await databaseContext.Appointments.FirstOrDefaultAsync(
+            a => a.AppointmentId == appointmentId,
+            cancelToken);
 
-        if (appointment is null)
+        if (recordToCancel is null)
         {
-            throw new NotFoundException("Appointment not found.");
+            throw new NotFoundException("No matching appointment record found to cancel.");
         }
 
-        if (role != UserRole.Admin && appointment.UserId != userId)
+        // Security check: only the owner or an administrator can cancel.
+        if (currentUserRole != UserRole.Admin && recordToCancel.UserId != currentUserId)
         {
-            throw new ForbiddenException("You are not allowed to cancel this appointment.");
+            throw new ForbiddenException("Unauthorized attempt to cancel an appointment.");
         }
 
-        if (appointment.Status == AppointmentStatus.Cancelled)
+        if (recordToCancel.Status == AppointmentStatus.Cancelled)
         {
-            throw new ValidationException("The appointment is already cancelled.");
+            throw new ValidationException("This appointment remains in a cancelled state already.");
         }
 
-        appointment.Status = AppointmentStatus.Cancelled;
-        appointment.CancellationReason = cancellationReason?.Trim();
-        appointment.CancelledAtUtc = DateTime.UtcNow;
+        recordToCancel.Status = AppointmentStatus.Cancelled;
+        recordToCancel.CancellationReason = reasonForCancellation?.Trim();
+        recordToCancel.CancelledAtUtc = DateTime.UtcNow;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await databaseContext.SaveChangesAsync(cancelToken);
     }
 
     public async Task<AppointmentResponseDto> UpdateAppointmentStatusAsync(
         int appointmentId,
-        UpdateAppointmentStatusDto request,
-        UserRole role,
-        CancellationToken cancellationToken = default)
+        UpdateAppointmentStatusDto statusDto,
+        UserRole adminRole,
+        CancellationToken cancelToken = default)
     {
-        if (role != UserRole.Admin)
+        if (adminRole != UserRole.Admin)
         {
-            throw new ForbiddenException("Only admins can update appointment statuses.");
+            throw new ForbiddenException("Administrative privileges are required for status modifications.");
         }
 
-        if (!Enum.TryParse<AppointmentStatus>(request.Status, true, out var status))
+        if (!Enum.TryParse<AppointmentStatus>(statusDto.Status, true, out var nextStatus))
         {
-            throw new ValidationException("The selected appointment status is invalid.");
+            throw new ValidationException("The provided status value is not valid within the system.");
         }
 
-        var appointment = await dbContext.Appointments
-            .Include(currentAppointment => currentAppointment.User)
-            .Include(currentAppointment => currentAppointment.Doctor)
-            .Include(currentAppointment => currentAppointment.Rating)
-            .FirstOrDefaultAsync(currentAppointment => currentAppointment.AppointmentId == appointmentId, cancellationToken);
+        var existingRecord = await databaseContext.Appointments
+            .Include(a => a.User)
+            .Include(a => a.Doctor)
+            .Include(a => a.Rating)
+            .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId, cancelToken);
 
-        if (appointment is null)
+        if (existingRecord is null)
         {
-            throw new NotFoundException("Appointment not found.");
+            throw new NotFoundException("Target appointment record was not found.");
         }
 
-        appointment.Status = status;
-        appointment.CancellationReason = status == AppointmentStatus.Cancelled ? request.CancellationReason?.Trim() : null;
-        appointment.CancelledAtUtc = status == AppointmentStatus.Cancelled ? DateTime.UtcNow : null;
+        existingRecord.Status = nextStatus;
+        
+        // Handle cancellation-specific metadata if the status is being set to Cancelled.
+        if (nextStatus == AppointmentStatus.Cancelled)
+        {
+            existingRecord.CancellationReason = statusDto.CancellationReason?.Trim();
+            existingRecord.CancelledAtUtc = DateTime.UtcNow;
+        }
+        else
+        {
+            existingRecord.CancellationReason = null;
+            existingRecord.CancelledAtUtc = null;
+        }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return MapAppointment(appointment);
+        await databaseContext.SaveChangesAsync(cancelToken);
+        return TransformToDto(existingRecord);
     }
 
-    private static AppointmentResponseDto MapAppointment(Appointment appointment) =>
-        new()
+    private static AppointmentResponseDto TransformToDto(Appointment entity)
+    {
+        return new AppointmentResponseDto
         {
-            AppointmentId = appointment.AppointmentId,
-            UserId = appointment.UserId,
-            UserName = appointment.User == null ? string.Empty : $"{appointment.User.FirstName} {appointment.User.LastName}".Trim(),
-            DoctorId = appointment.DoctorId,
-            DoctorName = appointment.Doctor?.FullName ?? string.Empty,
-            AppointmentDate = appointment.AppointmentDate.ToString("yyyy-MM-dd"),
-            TimeSlot = appointment.TimeSlot.ToString("HH:mm"),
-            Status = appointment.Status.ToString(),
-            ReasonForVisit = appointment.ReasonForVisit,
-            CancellationReason = appointment.CancellationReason,
-            CanRate = appointment.Status == AppointmentStatus.Completed && appointment.Rating is null
+            AppointmentId = entity.AppointmentId,
+            UserId = entity.UserId,
+            UserName = entity.User != null ? $"{entity.User.FirstName} {entity.User.LastName}".Trim() : "Unknown User",
+            DoctorId = entity.DoctorId,
+            DoctorName = entity.Doctor?.FullName ?? "Unknown Doctor",
+            AppointmentDate = entity.AppointmentDate.ToString("yyyy-MM-dd"),
+            TimeSlot = entity.TimeSlot.ToString("HH:mm"),
+            Status = entity.Status.ToString(),
+            ReasonForVisit = entity.ReasonForVisit,
+            CancellationReason = entity.CancellationReason,
+            CanRate = entity.Status == AppointmentStatus.Completed && entity.Rating == null
         };
+    }
 }

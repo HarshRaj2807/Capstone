@@ -7,92 +7,151 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fracto.Api.Controllers;
 
+/// <summary>
+/// Handles doctor-related data retrieval and management.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public sealed class DoctorsController(IDoctorService doctorService) : ControllerBase
+public sealed class DoctorsController(IDoctorService medicalProfessionalService) : ControllerBase
 {
+    /// <summary>
+    /// Retrieves a paginated list of all active doctors.
+    /// </summary>
+    /// <param name="pIndex">The current page index.</param>
+    /// <param name="pSize">Number of records per page.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>A paginated list of doctors.</returns>
     [HttpGet]
-    public async Task<ActionResult<PagedResponse<DoctorResponseDto>>> GetDoctors(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<ActionResult<PagedResponse<DoctorResponseDto>>> GetAllDoctors(
+        [FromQuery] int pIndex = 1,
+        [FromQuery] int pSize = 10,
+        CancellationToken token = default)
     {
-        var response = await doctorService.GetDoctorsAsync(null, null, null, null, pageNumber, pageSize, cancellationToken);
-        return Ok(response);
+        var resultList = await medicalProfessionalService.GetDoctorsAsync(null, null, null, null, pIndex, pSize, token);
+        return Ok(resultList);
     }
 
+    /// <summary>
+    /// Searches for doctors using specific filters like city, specialization, and rating.
+    /// </summary>
+    /// <param name="location">City name to filter by.</param>
+    /// <param name="specId">Specialization identifier.</param>
+    /// <param name="ratingFloor">Minimum average rating threshold.</param>
+    /// <param name="preferredDate">Filter for availability on a specific date.</param>
+    /// <param name="pIndex">Page number for results.</param>
+    /// <param name="pSize">Page size for results.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>A filtered and paginated list of doctors.</returns>
     [HttpGet("search")]
-    public async Task<ActionResult<PagedResponse<DoctorResponseDto>>> SearchDoctors(
-        [FromQuery] string? city,
-        [FromQuery] int? specializationId,
-        [FromQuery] decimal? minRating,
-        [FromQuery] DateOnly? appointmentDate,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<ActionResult<PagedResponse<DoctorResponseDto>>> SearchForDoctors(
+        [FromQuery] string? location,
+        [FromQuery] int? specId,
+        [FromQuery] decimal? ratingFloor,
+        [FromQuery] DateOnly? preferredDate,
+        [FromQuery] int pIndex = 1,
+        [FromQuery] int pSize = 10,
+        CancellationToken token = default)
     {
-        var response = await doctorService.GetDoctorsAsync(
-            city,
-            specializationId,
-            minRating,
-            appointmentDate,
-            pageNumber,
-            pageSize,
-            cancellationToken);
+        var filteredResult = await medicalProfessionalService.GetDoctorsAsync(
+            location,
+            specId,
+            ratingFloor,
+            preferredDate,
+            pIndex,
+            pSize,
+            token);
 
-        return Ok(response);
+        return Ok(filteredResult);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<DoctorResponseDto>> GetDoctorById(int id, CancellationToken cancellationToken)
+    /// <summary>
+    /// Gets detailed information for a specific doctor.
+    /// </summary>
+    /// <param name="docId">The unique ID of the doctor.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>Doctor details.</returns>
+    [HttpGet("{docId:int}")]
+    public async Task<ActionResult<DoctorResponseDto>> GetDoctorByUniqueId(int docId, CancellationToken token)
     {
-        var doctor = await doctorService.GetDoctorByIdAsync(id, cancellationToken);
-        return Ok(doctor);
+        var singleDoctor = await medicalProfessionalService.GetDoctorByIdAsync(docId, token);
+        return Ok(singleDoctor);
     }
 
-    [HttpGet("{id:int}/available-slots")]
-    public async Task<ActionResult<IReadOnlyCollection<SlotDto>>> GetAvailableSlots(
-        int id,
+    /// <summary>
+    /// Lists available consultation slots for a specific doctor on a given date.
+    /// </summary>
+    /// <param name="docId">The doctor identifier.</param>
+    /// <param name="date">The target date for slots.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>A collection of available slots.</returns>
+    [HttpGet("{docId:int}/available-slots")]
+    public async Task<ActionResult<IReadOnlyCollection<SlotDto>>> GetAvailableConsultationSlots(
+        int docId,
         [FromQuery] DateOnly date,
-        CancellationToken cancellationToken)
+        CancellationToken token)
     {
-        var slots = await doctorService.GetAvailableSlotsAsync(id, date, cancellationToken);
-        return Ok(slots);
+        var slotsList = await medicalProfessionalService.GetAvailableSlotsAsync(docId, date, token);
+        return Ok(slotsList);
     }
 
-    [HttpGet("{id:int}/ratings")]
-    public async Task<ActionResult<DoctorRatingsDto>> GetDoctorRatings(int id, CancellationToken cancellationToken)
+    /// <summary>
+    /// Retrieves feedback and ratings associated with a specific doctor.
+    /// </summary>
+    /// <param name="docId">Doctor ID.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>Rating summary and individual reviews.</returns>
+    [HttpGet("{docId:int}/ratings")]
+    public async Task<ActionResult<DoctorRatingsDto>> GetDoctorFeedbackAndRatings(int docId, CancellationToken token)
     {
-        var ratings = await doctorService.GetRatingsAsync(id, cancellationToken);
-        return Ok(ratings);
+        var feedbackData = await medicalProfessionalService.GetRatingsAsync(docId, token);
+        return Ok(feedbackData);
     }
 
+    /// <summary>
+    /// Adds a new doctor profile to the system.
+    /// </summary>
+    /// <param name="upsertData">Doctor creation details.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>The created doctor record.</returns>
     [Authorize(Roles = "Admin")]
     [HttpPost]
-    public async Task<ActionResult<DoctorResponseDto>> CreateDoctor(
-        [FromBody] DoctorUpsertDto request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<DoctorResponseDto>> CreateNewDoctorEntry(
+        [FromBody] DoctorUpsertDto upsertData,
+        CancellationToken token)
     {
-        var doctor = await doctorService.CreateDoctorAsync(request, cancellationToken);
-        return CreatedAtAction(nameof(GetDoctorById), new { id = doctor.DoctorId }, doctor);
+        var newDoctor = await medicalProfessionalService.CreateDoctorAsync(upsertData, token);
+        return CreatedAtAction(nameof(GetDoctorByUniqueId), new { docId = newDoctor.DoctorId }, newDoctor);
     }
 
+    /// <summary>
+    /// Updates an existing doctor's profile.
+    /// </summary>
+    /// <param name="docId">Identifier of the doctor to update.</param>
+    /// <param name="upsertData">Revised doctor data.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>The updated doctor record.</returns>
     [Authorize(Roles = "Admin")]
-    [HttpPut("{id:int}")]
-    public async Task<ActionResult<DoctorResponseDto>> UpdateDoctor(
-        int id,
-        [FromBody] DoctorUpsertDto request,
-        CancellationToken cancellationToken)
+    [HttpPut("{docId:int}")]
+    public async Task<ActionResult<DoctorResponseDto>> ModifyExistingDoctor(
+        int docId,
+        [FromBody] DoctorUpsertDto upsertData,
+        CancellationToken token)
     {
-        var doctor = await doctorService.UpdateDoctorAsync(id, request, cancellationToken);
-        return Ok(doctor);
+        var updatedDoctor = await medicalProfessionalService.UpdateDoctorAsync(docId, upsertData, token);
+        return Ok(updatedDoctor);
     }
 
+    /// <summary>
+    /// Permanently removes a doctor's profile from the system.
+    /// </summary>
+    /// <param name="docId">Doctor ID to be deleted.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>A success indication.</returns>
     [Authorize(Roles = "Admin")]
-    [HttpDelete("{id:int}")]
-    public async Task<ActionResult<object>> DeleteDoctor(int id, CancellationToken cancellationToken)
+    [HttpDelete("{docId:int}")]
+    public async Task<ActionResult<object>> RemoveDoctorFromSystem(int docId, CancellationToken token)
     {
-        await doctorService.DeleteDoctorAsync(id, cancellationToken);
-        return Ok(new { message = "Doctor deleted successfully." });
+        await medicalProfessionalService.DeleteDoctorAsync(docId, token);
+        return Ok(new { message = "The doctor's record has been successfully removed." });
     }
 }

@@ -7,71 +7,102 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fracto.Api.Controllers;
 
+/// <summary>
+/// Handles all incoming HTTP requests related to medical appointments.
+/// </summary>
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public sealed class AppointmentsController(IAppointmentService appointmentService) : ControllerBase
+public sealed class AppointmentsController(IAppointmentService serviceForAppointments) : ControllerBase
 {
+    /// <summary>
+    /// Retrieves a paginated collection of appointments based on filter criteria.
+    /// </summary>
+    /// <param name="appointmentStatus">Optional status filter (e.g., Booked, Completed).</param>
+    /// <param name="pageNr">The 1-based page index to retrieve.</param>
+    /// <param name="pageSizeLimit">The maximum number of records per result page.</param>
+    /// <param name="token">Cancellation token for aborting the operation.</param>
+    /// <returns>A paged response containing appointment details.</returns>
     [HttpGet]
     public async Task<ActionResult<PagedResponse<AppointmentResponseDto>>> GetAppointments(
-        [FromQuery] string? status,
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
+        [FromQuery] string? appointmentStatus,
+        [FromQuery] int pageNr = 1,
+        [FromQuery] int pageSizeLimit = 10,
+        CancellationToken token = default)
     {
-        var response = await appointmentService.GetAppointmentsAsync(
+        var appointmentResults = await serviceForAppointments.GetAppointmentsAsync(
             User.GetUserId(),
             User.GetUserRole(),
-            status,
-            pageNumber,
-            pageSize,
-            cancellationToken);
+            appointmentStatus,
+            pageNr,
+            pageSizeLimit,
+            token);
 
-        return Ok(response);
+        return Ok(appointmentResults);
     }
 
+    /// <summary>
+    /// Schedules a new medical appointment for the authenticated user.
+    /// </summary>
+    /// <param name="bookingRequest">Data transfer object containing booking details.</param>
+    /// <param name="token">Cancellation token for aborting the operation.</param>
+    /// <returns>A success message and the created appointment object.</returns>
     [HttpPost("book")]
     public async Task<ActionResult<object>> BookAppointment(
-        [FromBody] BookAppointmentRequestDto request,
-        CancellationToken cancellationToken)
+        [FromBody] BookAppointmentRequestDto bookingRequest,
+        CancellationToken token)
     {
-        var appointment = await appointmentService.BookAppointmentAsync(User.GetUserId(), request, cancellationToken);
+        var newlyCreatedAppointment = await serviceForAppointments.BookAppointmentAsync(User.GetUserId(), bookingRequest, token);
         return Ok(new
         {
-            message = "Appointment booked successfully.",
-            appointment
+            message = "Your medical appointment has been successfully scheduled.",
+            appointment = newlyCreatedAppointment
         });
     }
 
-    [HttpDelete("{id:int}")]
+    /// <summary>
+    /// Cancels an existing appointment provided it belongs to the user or admin is performing the action.
+    /// </summary>
+    /// <param name="appointmentId">The unique identifier of the appointment to cancel.</param>
+    /// <param name="cancellationReason">Optional justification for cancelling.</param>
+    /// <param name="token">Cancellation token for aborting the operation.</param>
+    /// <returns>A confirmation message of the cancellation.</returns>
+    [HttpDelete("{appointmentId:int}")]
     public async Task<ActionResult<object>> CancelAppointment(
-        int id,
-        [FromQuery] string? reason,
-        CancellationToken cancellationToken)
+        int appointmentId,
+        [FromQuery] string? cancellationReason,
+        CancellationToken token)
     {
-        await appointmentService.CancelAppointmentAsync(
-            id,
+        await serviceForAppointments.CancelAppointmentAsync(
+            appointmentId,
             User.GetUserId(),
             User.GetUserRole(),
-            reason,
-            cancellationToken);
+            cancellationReason,
+            token);
 
-        return Ok(new { message = "Appointment cancelled successfully." });
+        return Ok(new { message = "The selected appointment has been cancelled." });
     }
 
+    /// <summary>
+    /// Allows administrative staff to update the lifecycle status of an appointment.
+    /// </summary>
+    /// <param name="appointmentId">The unique identifier of the appointment.</param>
+    /// <param name="statusUpdateRequest">Payload containing the new status value.</param>
+    /// <param name="token">Cancellation token for aborting the operation.</param>
+    /// <returns>The updated appointment details.</returns>
     [Authorize(Roles = "Admin")]
-    [HttpPut("{id:int}/status")]
+    [HttpPut("{appointmentId:int}/status")]
     public async Task<ActionResult<AppointmentResponseDto>> UpdateAppointmentStatus(
-        int id,
-        [FromBody] UpdateAppointmentStatusDto request,
-        CancellationToken cancellationToken)
+        int appointmentId,
+        [FromBody] UpdateAppointmentStatusDto statusUpdateRequest,
+        CancellationToken token)
     {
-        var appointment = await appointmentService.UpdateAppointmentStatusAsync(
-            id,
-            request,
+        var modifiedAppointment = await serviceForAppointments.UpdateAppointmentStatusAsync(
+            appointmentId,
+            statusUpdateRequest,
             User.GetUserRole(),
-            cancellationToken);
+            token);
 
-        return Ok(appointment);
+        return Ok(modifiedAppointment);
     }
 }

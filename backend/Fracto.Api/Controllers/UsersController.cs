@@ -6,25 +6,41 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fracto.Api.Controllers;
 
+/// <summary>
+/// Managed by administrators to oversee user accounts and their statuses.
+/// </summary>
 [ApiController]
 [Authorize(Roles = "Admin")]
 [Route("api/[controller]")]
-public sealed class UsersController(IUserService userService) : ControllerBase
+public sealed class UsersController(IUserService userAccountService) : ControllerBase
 {
+    /// <summary>
+    /// Returns a paginated list of all users registered in the system.
+    /// </summary>
+    /// <param name="pNum">The current page number to retrieve.</param>
+    /// <param name="pSize">The number of users per page.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>A paginated response containing user details.</returns>
     [HttpGet]
-    public async Task<ActionResult<PagedResponse<UserListItemDto>>> GetUsers(
-        [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10,
-        CancellationToken cancellationToken = default)
+    public async Task<ActionResult<PagedResponse<UserListItemDto>>> FetchAllUsers(
+        [FromQuery] int pNum = 1,
+        [FromQuery] int pSize = 10,
+        CancellationToken token = default)
     {
-        var response = await userService.GetUsersAsync(pageNumber, pageSize, cancellationToken);
-        return Ok(response);
+        var usersList = await userAccountService.GetUsersAsync(pNum, pSize, token);
+        return Ok(usersList);
     }
 
-    [HttpPatch("{id:int}/toggle-status")]
-    public async Task<ActionResult<object>> ToggleUserStatus(int id, CancellationToken cancellationToken)
+    /// <summary>
+    /// Toggles the active/inactive status of a specific user account.
+    /// </summary>
+    /// <param name="uId">The unique ID of the user.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>A confirmation message.</returns>
+    [HttpPatch("{uId:int}/toggle-status")]
+    public async Task<ActionResult<object>> FlipUserAccountStatus(int uId, CancellationToken token)
     {
-        await userService.ToggleUserStatusAsync(id, cancellationToken);
-        return Ok(new { message = "User status updated successfully." });
+        await userAccountService.ToggleUserStatusAsync(uId, token);
+        return Ok(new { message = "The user account status has been successfully modified." });
     }
 }

@@ -13,31 +13,33 @@ import { PagedResponse } from '../models/shared.models';
 export class AppointmentService {
   private readonly http = inject(HttpClient);
 
-  getAppointments(status?: string): Observable<PagedResponse<Appointment>> {
-    let params = new HttpParams().set('pageNumber', 1).set('pageSize', 50);
+  fetchAppointments(statusFilter?: string): Observable<PagedResponse<Appointment>> {
+    let queryParams = new HttpParams()
+      .set('pageNr', 1)
+      .set('pageSizeLimit', 50);
 
-    if (status) {
-      params = params.set('status', status);
+    if (statusFilter) {
+      queryParams = queryParams.set('appointmentStatus', statusFilter);
     }
 
-    return this.http.get<PagedResponse<Appointment>>(`${API_BASE_URL}/appointments`, { params });
+    return this.http.get<PagedResponse<Appointment>>(`${API_BASE_URL}/appointments`, { params: queryParams });
   }
 
-  bookAppointment(payload: BookAppointmentRequest): Observable<{ message: string; appointment: Appointment }> {
+  scheduleNewAppointment(data: BookAppointmentRequest): Observable<{ message: string; appointment: Appointment }> {
     return this.http.post<{ message: string; appointment: Appointment }>(
       `${API_BASE_URL}/appointments/book`,
-      payload
+      data
     );
   }
 
-  cancelAppointment(appointmentId: number, reason?: string): Observable<{ message: string }> {
-    let params = new HttpParams();
-    if (reason) {
-      params = params.set('reason', reason);
+  cancelExistingAppointment(id: number, justification?: string): Observable<{ message: string }> {
+    let queryParams = new HttpParams();
+    if (justification) {
+      queryParams = queryParams.set('cancellationReason', justification);
     }
 
-    return this.http.delete<{ message: string }>(`${API_BASE_URL}/appointments/${appointmentId}`, {
-      params
+    return this.http.delete<{ message: string }>(`${API_BASE_URL}/appointments/${id}`, {
+      params: queryParams
     });
   }
 

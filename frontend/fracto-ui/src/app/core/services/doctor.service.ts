@@ -9,62 +9,83 @@ import { PagedResponse } from '../models/shared.models';
 export class DoctorService {
   private readonly http = inject(HttpClient);
 
-  getDoctors(pageNumber = 1, pageSize = 10): Observable<PagedResponse<Doctor>> {
-    const params = new HttpParams()
-      .set('pageNumber', pageNumber)
-      .set('pageSize', pageSize);
+  /**
+   * Retrieves a paginated list of all medical professionals.
+   */
+  retrieveAllDoctors(pIndex = 1, pSize = 10): Observable<PagedResponse<Doctor>> {
+    const queryParams = new HttpParams()
+      .set('pIndex', pIndex)
+      .set('pSize', pSize);
 
-    return this.http.get<PagedResponse<Doctor>>(`${API_BASE_URL}/doctors`, { params });
+    return this.http.get<PagedResponse<Doctor>>(`${API_BASE_URL}/doctors`, { params: queryParams });
   }
 
-  searchDoctors(filters: {
-    city?: string;
-    specializationId?: number;
-    minRating?: number;
-    appointmentDate?: string;
-    pageNumber?: number;
-    pageSize?: number;
+  /**
+   * Filters doctors based on location, specialization, rating, and availability.
+   */
+  findDoctorsWithFilters(criteria: {
+    location?: string;
+    specId?: number;
+    ratingFloor?: number;
+    preferredDate?: string;
+    pIndex?: number;
+    pSize?: number;
   }): Observable<PagedResponse<Doctor>> {
-    let params = new HttpParams()
-      .set('pageNumber', filters.pageNumber ?? 1)
-      .set('pageSize', filters.pageSize ?? 12);
+    let queryParams = new HttpParams()
+      .set('pIndex', criteria.pIndex ?? 1)
+      .set('pSize', criteria.pSize ?? 12);
 
-    if (filters.city) {
-      params = params.set('city', filters.city);
+    if (criteria.location) {
+      queryParams = queryParams.set('location', criteria.location);
     }
 
-    if (filters.specializationId) {
-      params = params.set('specializationId', filters.specializationId);
+    if (criteria.specId) {
+      queryParams = queryParams.set('specId', criteria.specId);
     }
 
-    if (filters.minRating) {
-      params = params.set('minRating', filters.minRating);
+    if (criteria.ratingFloor) {
+      queryParams = queryParams.set('ratingFloor', criteria.ratingFloor);
     }
 
-    if (filters.appointmentDate) {
-      params = params.set('appointmentDate', filters.appointmentDate);
+    if (criteria.preferredDate) {
+      queryParams = queryParams.set('preferredDate', criteria.preferredDate);
     }
 
-    return this.http.get<PagedResponse<Doctor>>(`${API_BASE_URL}/doctors/search`, { params });
+    return this.http.get<PagedResponse<Doctor>>(`${API_BASE_URL}/doctors/search`, { params: queryParams });
   }
 
-  createDoctor(payload: DoctorFormValue): Observable<Doctor> {
-    return this.http.post<Doctor>(`${API_BASE_URL}/doctors`, payload);
+  /**
+   * Submits a request to create a new doctor profile.
+   */
+  addNewDoctorRecord(entry: DoctorFormValue): Observable<Doctor> {
+    return this.http.post<Doctor>(`${API_BASE_URL}/doctors`, entry);
   }
 
-  updateDoctor(doctorId: number, payload: DoctorFormValue): Observable<Doctor> {
-    return this.http.put<Doctor>(`${API_BASE_URL}/doctors/${doctorId}`, payload);
+  /**
+   * Updates an existing doctor's information.
+   */
+  modifyDoctorDetails(id: number, entry: DoctorFormValue): Observable<Doctor> {
+    return this.http.put<Doctor>(`${API_BASE_URL}/doctors/${id}`, entry);
   }
 
-  deleteDoctor(doctorId: number): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${API_BASE_URL}/doctors/${doctorId}`);
+  /**
+   * Deletes a doctor's profile from the database.
+   */
+  removeDoctorProfile(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${API_BASE_URL}/doctors/${id}`);
   }
 
-  getDoctorRatings(doctorId: number): Observable<DoctorRatingsResponse> {
-    return this.http.get<DoctorRatingsResponse>(`${API_BASE_URL}/doctors/${doctorId}/ratings`);
+  /**
+   * Fetches ratings and reviews for a specific doctor.
+   */
+  fetchRatingsByDoctorId(id: number): Observable<DoctorRatingsResponse> {
+    return this.http.get<DoctorRatingsResponse>(`${API_BASE_URL}/doctors/${id}/ratings`);
   }
 
-  getDoctorById(doctorId: number): Observable<Doctor> {
-    return this.http.get<Doctor>(`${API_BASE_URL}/doctors/${doctorId}`);
+  /**
+   * Retrieves full details for a single doctor by their record ID.
+   */
+  fetchSingleDoctorDetails(id: number): Observable<Doctor> {
+    return this.http.get<Doctor>(`${API_BASE_URL}/doctors/${id}`);
   }
 }

@@ -41,7 +41,7 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
 
       <div class="content-grid">
         <aside class="filters-card">
-          <form [formGroup]="searchForm" (ngSubmit)="searchDoctors()">
+          <form [formGroup]="searchForm" (ngSubmit)="executeDoctorSearch()">
             <h2>Search Filters</h2>
             <p class="form-hint">Leave any field blank if you want broader results.</p>
 
@@ -79,9 +79,9 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
 
             <div class="filter-actions">
               <button type="submit" [disabled]="loading()">
-                {{ loading() ? 'Searching...' : 'Search Doctors' }}
+                {{ loading() ? 'Searching...' : 'Explore Doctors' }}
               </button>
-              <button type="button" class="secondary" (click)="resetFilters()">Reset</button>
+              <button type="button" class="secondary" (click)="resetFilters()">Clear Filters</button>
             </div>
           </form>
         </aside>
@@ -529,38 +529,38 @@ export class DoctorsPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSpecializations();
-    this.searchDoctors();
+    this.executeDoctorSearch();
   }
 
   loadSpecializations(): void {
-    this.specializationService.getSpecializations().subscribe({
+    this.specializationService.retrieveMedicalSpecialties().subscribe({
       next: (items) => this.specializations.set(items),
       error: (error) =>
         this.errorMessage.set(error.error?.message ?? 'Unable to load specializations.')
     });
   }
 
-  searchDoctors(): void {
+  executeDoctorSearch(): void {
     this.loading.set(true);
     this.errorMessage.set('');
     this.message.set('');
 
     const filters = this.searchForm.getRawValue();
     this.doctorService
-      .searchDoctors({
-        city: filters.city.trim() || undefined,
-        specializationId: filters.specializationId ? Number(filters.specializationId) : undefined,
-        minRating: filters.minRating ? Number(filters.minRating) : undefined,
-        appointmentDate: filters.appointmentDate || undefined,
-        pageNumber: 1,
-        pageSize: 12
+      .findDoctorsWithFilters({
+        location: filters.city.trim() || undefined,
+        specId: filters.specializationId ? Number(filters.specializationId) : undefined,
+        ratingFloor: filters.minRating ? Number(filters.minRating) : undefined,
+        preferredDate: filters.appointmentDate || undefined,
+        pIndex: 1,
+        pSize: 12
       })
       .subscribe({
-        next: (response) => {
+        next: (response: any) => {
           this.loading.set(false);
           this.doctors.set(response.items);
         },
-        error: (error) => {
+        error: (error: any) => {
           this.loading.set(false);
           this.errorMessage.set(error.error?.message ?? 'Unable to search doctors right now.');
         }
@@ -575,7 +575,7 @@ export class DoctorsPageComponent implements OnInit {
       appointmentDate: ''
     });
 
-    this.searchDoctors();
+    this.executeDoctorSearch();
   }
 
   async bookSlot(doctor: Doctor, slot: string): Promise<void> {

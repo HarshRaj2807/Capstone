@@ -6,22 +6,31 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Fracto.Api.Controllers;
 
+/// <summary>
+/// Handles user feedback and ratings for medical professionals.
+/// </summary>
 [ApiController]
 [Authorize]
 [Route("api/[controller]")]
-public sealed class RatingsController(IRatingService ratingService) : ControllerBase
+public sealed class RatingsController(IRatingService feedbackManagementService) : ControllerBase
 {
+    /// <summary>
+    /// Processes and saves a new rating and review from a patient.
+    /// </summary>
+    /// <param name="feedbackData">The rating and comment details.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>A confirmation message and the saved rating data.</returns>
     [HttpPost]
-    public async Task<ActionResult<object>> CreateRating(
-        [FromBody] RatingCreateDto request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<object>> PostNewRating(
+        [FromBody] RatingCreateDto feedbackData,
+        CancellationToken token)
     {
-        var rating = await ratingService.CreateRatingAsync(User.GetUserId(), request, cancellationToken);
+        var savedRating = await feedbackManagementService.CreateRatingAsync(User.GetUserId(), feedbackData, token);
 
         return Ok(new
         {
-            message = "Rating submitted successfully.",
-            rating
+            message = "Your feedback has been submitted successfully.",
+            data = savedRating
         });
     }
 }

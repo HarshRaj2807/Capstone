@@ -2,7 +2,7 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DoctorService } from '../../core/services/doctor.service';
-import { DoctorRatingsResponse } from '../../core/models/doctor.models';
+import { Doctor, DoctorRatingsResponse } from '../../core/models/doctor.models';
 
 @Component({
   selector: 'app-doctor-reviews-page',
@@ -191,16 +191,13 @@ export class DoctorReviewsPageComponent implements OnInit {
   }
 
   private loadReviews(doctorId: number): void {
-    this.doctorService.getDoctorRatings(doctorId).subscribe({
-      next: (response) => {
+    this.doctorService.fetchRatingsByDoctorId(doctorId).subscribe({
+      next: (response: DoctorRatingsResponse) => {
         this.ratings.set(response);
-        // We could also fetch doctor details to get the name, 
-        // but for now we'll rely on the parent or service if needed.
-        // Or we just fetch the doctor by ID to get the name.
         this.fetchDoctorName(doctorId);
         this.loading.set(false);
       },
-      error: (error) => {
+      error: (error: any) => {
         this.errorMessage.set(error.error?.message ?? 'Unable to load reviews.');
         this.loading.set(false);
       }
@@ -208,9 +205,9 @@ export class DoctorReviewsPageComponent implements OnInit {
   }
 
   private fetchDoctorName(doctorId: number): void {
-      this.doctorService.getDoctorById(doctorId).subscribe({
-          next: (doc) => this.doctorName.set(doc.fullName),
-          error: () => {} // Fallback to "Doctor"
-      });
+    this.doctorService.fetchSingleDoctorDetails(doctorId).subscribe({
+      next: (doc: Doctor) => this.doctorName.set(doc.fullName),
+      error: () => {} // Fallback to "Doctor"
+    });
   }
 }

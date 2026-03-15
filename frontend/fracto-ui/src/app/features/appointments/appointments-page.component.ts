@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { AppointmentService } from '../../core/services/appointment.service';
 import { RatingService } from '../../core/services/rating.service';
 import { Appointment } from '../../core/models/appointment.models';
+import { PagedResponse } from '../../core/models/shared.models';
 import {
   ConfirmationDetail,
   ConfirmationPopupComponent
@@ -21,8 +22,8 @@ import {
           <h1>Track bookings, cancellations, and completed visits.</h1>
         </div>
 
-        <form class="status-filter" [formGroup]="filterForm">
-          <select formControlName="status" (change)="loadAppointments()">
+        <form class="status-filter" [formGroup]="appointmentStatusFilterForm">
+          <select formControlName="status" (change)="fetchAppointmentsFromApi()">
             <option value="">All statuses</option>
             <option value="Booked">Booked</option>
             <option value="Confirmed">Confirmed</option>
@@ -32,23 +33,23 @@ import {
         </form>
       </header>
 
-      @if (errorMessage()) {
-        <div class="feedback error">{{ errorMessage() }}</div>
+      @if (errorNotification()) {
+        <div class="feedback error">{{ errorNotification() }}</div>
       }
 
-      @if (message()) {
-        <div class="feedback success">{{ message() }}</div>
+      @if (successNotification()) {
+        <div class="feedback success">{{ successNotification() }}</div>
       }
 
       <div class="appointments-grid">
-        @if (appointments().length === 0) {
+        @if (listOfAppointments().length === 0) {
           <article class="empty-state">
             <h3>No appointments found.</h3>
             <p>Book a consultation first or adjust the selected status filter.</p>
           </article>
         }
 
-        @for (appointment of appointments(); track appointment.appointmentId) {
+        @for (appointment of listOfAppointments(); track appointment.appointmentId) {
           <article class="appointment-card">
             <div class="card-header">
               <div>
@@ -75,7 +76,7 @@ import {
 
             <div class="card-actions">
               @if (appointment.status !== 'Cancelled') {
-                <button type="button" class="secondary" (click)="cancelAppointment(appointment)">
+                <button type="button" class="secondary" (click)="cancelSpecificAppointment(appointment)">
                   Cancel Appointment
                 </button>
               }
@@ -88,8 +89,8 @@ import {
                   <label>
                     Rating
                     <select
-                      [value]="getDraft(appointment.appointmentId).ratingValue"
-                      (change)="updateRatingValue(appointment.appointmentId, $any($event.target).value)">
+                      [value]="getReviewDraftById(appointment.appointmentId).ratingValue"
+                      (change)="modifyDraftRatingValue(appointment.appointmentId, $any($event.target).value)">
                       <option value="5">5 - Excellent</option>
                       <option value="4">4 - Good</option>
                       <option value="3">3 - Average</option>
@@ -102,13 +103,13 @@ import {
                     Review
                     <textarea
                       rows="3"
-                      [value]="getDraft(appointment.appointmentId).reviewComment"
-                      (input)="updateReviewComment(appointment.appointmentId, $any($event.target).value)"
+                      [value]="getReviewDraftById(appointment.appointmentId).reviewComment"
+                      (input)="modifyDraftReviewComment(appointment.appointmentId, $any($event.target).value)"
                       placeholder="Share how the consultation went"></textarea>
                   </label>
                 </div>
 
-                <button type="button" (click)="submitRating(appointment)">Submit Rating</button>
+                <button type="button" (click)="sendRatingToApi(appointment)">Submit Rating</button>
               </div>
             }
           </article>
@@ -116,13 +117,13 @@ import {
       </div>
 
       <app-confirmation-popup
-        [visible]="popupVisible()"
-        [title]="popupTitle()"
-        [message]="popupMessage()"
-        [details]="popupDetails()"
+        [visible]="isConfirmationPopupVisible()"
+        [title]="confirmationPopupTitle()"
+        [message]="confirmationPopupMessage()"
+        [details]="confirmationPopupDetails()"
         [primaryLabel]="'Close'"
-        (primary)="closePopup()"
-        (close)="closePopup()">
+        (primary)="dismissConfirmationPopup()"
+        (close)="dismissConfirmationPopup()">
       </app-confirmation-popup>
     </section>
   `,
@@ -164,113 +165,140 @@ import {
 })
 export class AppointmentsPageComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
-  private readonly appointmentService = inject(AppointmentService);
-  private readonly ratingService = inject(RatingService);
+  private readonly appointmentApi = inject(AppointmentService);
+  private readonly reviewService = inject(RatingService);
 
-  readonly appointments = signal<Appointment[]>([]);
-  readonly errorMessage = signal('');
-  readonly message = signal('');
-  readonly ratingDrafts = signal<Record<number, { ratingValue: number; reviewComment: string }>>({});
-  readonly popupVisible = signal(false);
-  readonly popupTitle = signal('');
-  readonly popupMessage = signal('');
-  readonly popupDetails = signal<ConfirmationDetail[]>([]);
+  readonly listOfAppointments = signal<Appointment[]>([]);
+  readonly errorNotification = signal('');
+  readonly successNotification = signal('');
+  readonly pendingReviewDrafts = signal<Record<number, { ratingValue: number; reviewComment: string }>>({});
+  readonly isConfirmationPopupVisible = signal(false);
+  readonly confirmationPopupTitle = signal('');
+  readonly confirmationPopupMessage = signal('');
+  readonly confirmationPopupDetails = signal<ConfirmationDetail[]>([]);
 
-  readonly filterForm = this.formBuilder.nonNullable.group({
+  readonly appointmentStatusFilterForm = this.formBuilder.nonNullable.group({
     status: ['']
   });
 
   ngOnInit(): void {
-    this.loadAppointments();
+    this.fetchAppointmentsFromApi();
   }
 
-  loadAppointments(): void {
-    this.errorMessage.set('');
-    this.message.set('');
+  /**
+   * Fetches the list of appointments from the server based on the selected status filter.
+   */
+  fetchAppointmentsFromApi(): void {
+    this.errorNotification.set('');
+    this.successNotification.set('');
 
-    this.appointmentService.getAppointments(this.filterForm.getRawValue().status || undefined).subscribe({
-      next: (response) => this.appointments.set(response.items),
-      error: (error) =>
-        this.errorMessage.set(error.error?.message ?? 'Unable to load appointments right now.')
+    this.appointmentApi.fetchAppointments(this.appointmentStatusFilterForm.getRawValue().status || undefined).subscribe({
+      next: (response: PagedResponse<Appointment>) => this.listOfAppointments.set(response.items),
+      error: (err: any) =>
+        this.errorNotification.set(err.error?.message ?? 'A problem occurred while retrieving your appointments.')
     });
   }
 
-  cancelAppointment(appointment: Appointment): void {
-    const reason = window.prompt('Optional cancellation reason', '') ?? '';
+  /**
+   * Prompts the user for a reason and cancels the selected appointment.
+   * @param targetAppointment The appointment record to be cancelled.
+   */
+  cancelSpecificAppointment(targetAppointment: Appointment): void {
+    const reasonText = window.prompt('Please provide a reason for cancellation (optional):', '') ?? '';
 
-    this.appointmentService.cancelAppointment(appointment.appointmentId, reason || undefined).subscribe({
-      next: (response) => {
-        this.message.set(response.message);
-        this.openPopup('Appointment Cancelled', response.message, [
-          { label: 'Doctor', value: appointment.doctorName },
-          { label: 'Date', value: appointment.appointmentDate },
-          { label: 'Time', value: appointment.timeSlot }
+    this.appointmentApi.cancelExistingAppointment(targetAppointment.appointmentId, reasonText || undefined).subscribe({
+      next: (res: { message: string }) => {
+        this.successNotification.set(res.message);
+        this.displayDetailedPopup('Appointment Cancelled', res.message, [
+          { label: 'Doctor', value: targetAppointment.doctorName },
+          { label: 'Date', value: targetAppointment.appointmentDate },
+          { label: 'Time', value: targetAppointment.timeSlot }
         ]);
-        this.loadAppointments();
+        this.fetchAppointmentsFromApi();
       },
-      error: (error) =>
-        this.errorMessage.set(error.error?.message ?? 'Unable to cancel the appointment right now.')
+      error: (err: any) =>
+        this.errorNotification.set(err.error?.message ?? 'There was an issue cancelling the appointment.')
     });
   }
 
-  getDraft(appointmentId: number): { ratingValue: number; reviewComment: string } {
-    return this.ratingDrafts()[appointmentId] ?? { ratingValue: 5, reviewComment: '' };
+  /**
+   * Retrieves or initializes a review draft for a specific appointment ID.
+   * @param id The unique identifier for the appointment.
+   */
+  getReviewDraftById(id: number): { ratingValue: number; reviewComment: string } {
+    return this.pendingReviewDrafts()[id] ?? { ratingValue: 5, reviewComment: '' };
   }
 
-  updateRatingValue(appointmentId: number, value: string): void {
-    const current = this.getDraft(appointmentId);
-    this.ratingDrafts.set({
-      ...this.ratingDrafts(),
-      [appointmentId]: {
-        ...current,
-        ratingValue: Number(value)
+  /**
+   * Updates the rating score for a specific appointment draft.
+   */
+  modifyDraftRatingValue(id: number, val: string): void {
+    const draft = this.getReviewDraftById(id);
+    this.pendingReviewDrafts.set({
+      ...this.pendingReviewDrafts(),
+      [id]: {
+        ...draft,
+        ratingValue: Number(val)
       }
     });
   }
 
-  updateReviewComment(appointmentId: number, value: string): void {
-    const current = this.getDraft(appointmentId);
-    this.ratingDrafts.set({
-      ...this.ratingDrafts(),
-      [appointmentId]: {
-        ...current,
-        reviewComment: value
+  /**
+   * Updates the text commentary for a specific appointment draft.
+   */
+  modifyDraftReviewComment(id: number, val: string): void {
+    const draft = this.getReviewDraftById(id);
+    this.pendingReviewDrafts.set({
+      ...this.pendingReviewDrafts(),
+      [id]: {
+        ...draft,
+        reviewComment: val
       }
     });
   }
 
-  submitRating(appointment: Appointment): void {
-    const draft = this.getDraft(appointment.appointmentId);
+  /**
+   * Performs the API call to submit a rating and review for a completed consultation.
+   * @param item The appointment item being rated.
+   */
+  sendRatingToApi(item: Appointment): void {
+    const currentDraft = this.getReviewDraftById(item.appointmentId);
 
-    this.ratingService
+    this.reviewService
       .createRating({
-        appointmentId: appointment.appointmentId,
-        doctorId: appointment.doctorId,
-        ratingValue: draft.ratingValue,
-        reviewComment: draft.reviewComment
+        appointmentId: item.appointmentId,
+        doctorId: item.doctorId,
+        ratingValue: currentDraft.ratingValue,
+        reviewComment: currentDraft.reviewComment
       })
       .subscribe({
-        next: (response) => {
-          this.message.set(response.message);
-          this.openPopup('Rating Submitted', response.message, [
-            { label: 'Doctor', value: appointment.doctorName },
-            { label: 'Rating', value: `${draft.ratingValue} / 5` }
+        next: (res) => {
+          this.successNotification.set(res.message);
+          this.displayDetailedPopup('Rating Submitted', res.message, [
+            { label: 'Doctor', value: item.doctorName },
+            { label: 'Rating', value: `${currentDraft.ratingValue} / 5` }
           ]);
-          this.loadAppointments();
+          this.fetchAppointmentsFromApi();
         },
-        error: (error) =>
-          this.errorMessage.set(error.error?.message ?? 'Unable to submit the rating right now.')
+        error: (err) =>
+          this.errorNotification.set(err.error?.message ?? 'Failed to submit the rating at this time.')
       });
   }
 
-  closePopup(): void {
-    this.popupVisible.set(false);
+  /**
+   * Hides the confirmation modal.
+   */
+  dismissConfirmationPopup(): void {
+    this.isConfirmationPopupVisible.set(false);
   }
 
-  private openPopup(title: string, message: string, details: ConfirmationDetail[] = []): void {
-    this.popupTitle.set(title);
-    this.popupMessage.set(message);
-    this.popupDetails.set(details);
-    this.popupVisible.set(true);
+  /**
+   * Configures and displays the notification popup.
+   */
+  private displayDetailedPopup(header: string, body: string, info: ConfirmationDetail[] = []): void {
+    this.confirmationPopupTitle.set(header);
+    this.confirmationPopupMessage.set(body);
+    this.confirmationPopupDetails.set(info);
+    this.isConfirmationPopupVisible.set(true);
   }
 }

@@ -8,7 +8,11 @@ import { Specialization } from '../models/doctor.models';
 export class SpecializationService {
   private readonly http = inject(HttpClient);
 
-  getSpecializations(): Observable<Specialization[]> {
+  /**
+   * Retrieves all available medical specialties from the system.
+   * @returns An observable array of Specialization.
+   */
+  retrieveMedicalSpecialties(): Observable<Specialization[]> {
     return this.http.get<Specialization[]>(`${API_BASE_URL}/specializations`);
   }
 }

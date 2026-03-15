@@ -306,7 +306,7 @@ export class PaymentPageComponent implements OnInit {
     timer(900)
       .pipe(
         switchMap(() =>
-          this.appointmentService.bookAppointment({
+          this.appointmentService.scheduleNewAppointment({
             doctorId: context.doctorId,
             appointmentDate: context.appointmentDate,
             timeSlot: context.timeSlot,
@@ -315,12 +315,12 @@ export class PaymentPageComponent implements OnInit {
         )
       )
       .subscribe({
-        next: (response) => {
+        next: (response: { message: string; appointment: Appointment }) => {
           this.isProcessing.set(false);
           this.bookedAppointment.set(response.appointment);
           this.popupVisible.set(true);
         },
-        error: (error) => {
+        error: (error: any) => {
           this.isProcessing.set(false);
           this.errorMessage.set(error.error?.message ?? 'Unable to complete the payment and booking right now.');
         }

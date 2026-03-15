@@ -291,19 +291,19 @@ export class AdminPageComponent implements OnInit {
     this.errorMessage.set('');
 
     forkJoin({
-      doctors: this.doctorService.getDoctors(1, 50),
-      users: this.userService.getUsers(),
-      appointments: this.appointmentService.getAppointments(),
-      specializations: this.specializationService.getSpecializations()
+      doctors: this.doctorService.retrieveAllDoctors(1, 50),
+      users: this.userService.retrieveRegisteredUsers(),
+      appointments: this.appointmentService.fetchAppointments(),
+      specializations: this.specializationService.retrieveMedicalSpecialties()
     }).subscribe({
-      next: ({ doctors, users, appointments, specializations }) => {
+      next: ({ doctors, users, appointments, specializations }: any) => {
         this.doctors.set(doctors.items);
         this.users.set(users.items);
         this.appointments.set(appointments.items);
         this.specializations.set(specializations);
         this.initializeAppointmentDrafts(appointments.items);
       },
-      error: (error) =>
+      error: (error: any) =>
         this.errorMessage.set(error.error?.message ?? 'Unable to load the admin dashboard right now.')
     });
   }
@@ -358,8 +358,8 @@ export class AdminPageComponent implements OnInit {
     };
 
     const request$ = this.editingDoctorId()
-      ? this.doctorService.updateDoctor(this.editingDoctorId()!, payload)
-      : this.doctorService.createDoctor(payload);
+      ? this.doctorService.modifyDoctorDetails(this.editingDoctorId()!, payload)
+      : this.doctorService.addNewDoctorRecord(payload);
 
     request$.subscribe({
       next: () => {
@@ -367,7 +367,7 @@ export class AdminPageComponent implements OnInit {
         this.resetDoctorForm();
         this.loadDashboard();
       },
-      error: (error) =>
+      error: (error: any) =>
         this.errorMessage.set(error.error?.message ?? 'Unable to save the doctor profile right now.')
     });
   }
@@ -377,12 +377,12 @@ export class AdminPageComponent implements OnInit {
       return;
     }
 
-    this.doctorService.deleteDoctor(doctorId).subscribe({
-      next: (response) => {
+    this.doctorService.removeDoctorProfile(doctorId).subscribe({
+      next: (response: { message: string }) => {
         this.message.set(response.message);
         this.loadDashboard();
       },
-      error: (error) =>
+      error: (error: any) =>
         this.errorMessage.set(error.error?.message ?? 'Unable to delete the doctor right now.')
     });
   }
@@ -440,7 +440,7 @@ export class AdminPageComponent implements OnInit {
   }
 
   toggleUserStatus(userId: number): void {
-    this.userService.toggleUserStatus(userId).subscribe({
+    this.userService.updateUserAccountStatus(userId).subscribe({
       next: (response) => {
         this.message.set(response.message);
         this.loadDashboard();
