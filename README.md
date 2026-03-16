@@ -66,7 +66,7 @@ If your SQL Server setup is different, update the connection settings in `backen
 ### Start the backend
 
 ```bash
-cd backend/Fracto.Api
+cd Capstone/backend/Fracto.Api
 dotnet restore
 dotnet run
 ```
@@ -81,7 +81,7 @@ Backend URLs:
 Open a second terminal and run:
 
 ```bash
-cd frontend/fracto-ui
+cd Capstone/frontend/fracto-ui
 npm install
 npm start
 ```
