@@ -11,4 +11,6 @@ public sealed class JwtSettings
     public string Key { get; set; } = "ChangeThisDevelopmentKey1234567890!";
 
     public int ExpiryMinutes { get; set; } = 180;
+
+    public int RefreshTokenExpiryDays { get; set; } = 7;
 }

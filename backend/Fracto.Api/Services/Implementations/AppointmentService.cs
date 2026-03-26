@@ -166,6 +166,90 @@ public sealed class AppointmentService(FractoDbContext databaseContext) : IAppoi
         await databaseContext.SaveChangesAsync(cancelToken);
     }
 
+    public async Task<AppointmentResponseDto> RescheduleAppointmentAsync(
+        int appointmentId,
+        int currentUserId,
+        UserRole currentUserRole,
+        RescheduleAppointmentRequestDto request,
+        CancellationToken cancelToken = default)
+    {
+        var appointment = await databaseContext.Appointments
+            .Include(a => a.Doctor)
+            .Include(a => a.User)
+            .Include(a => a.Rating)
+            .FirstOrDefaultAsync(a => a.AppointmentId == appointmentId, cancelToken);
+
+        if (appointment is null)
+        {
+            throw new NotFoundException("Appointment not found.");
+        }
+
+        if (currentUserRole != UserRole.Admin && appointment.UserId != currentUserId)
+        {
+            throw new ForbiddenException("Unauthorized attempt to reschedule this appointment.");
+        }
+
+        if (appointment.Status == AppointmentStatus.Cancelled)
+        {
+            throw new ValidationException("Cancelled appointments cannot be rescheduled.");
+        }
+
+        if (appointment.Status == AppointmentStatus.Completed)
+        {
+            throw new ValidationException("Completed appointments cannot be rescheduled.");
+        }
+
+        if (request.AppointmentDate < DateOnly.FromDateTime(DateTime.Now))
+        {
+            throw new ValidationException("Selected date must be in the future.");
+        }
+
+        if (!TimeOnly.TryParse(request.TimeSlot, out var parsedTimeSlot))
+        {
+            throw new ValidationException("The provided time slot format is not recognized.");
+        }
+
+        if (appointment.Doctor is null || !appointment.Doctor.IsActive)
+        {
+            throw new ValidationException("The selected doctor is not available.");
+        }
+
+        if (parsedTimeSlot < appointment.Doctor.ConsultationStartTime || parsedTimeSlot >= appointment.Doctor.ConsultationEndTime)
+        {
+            throw new ValidationException("This time slot is outside of the doctor's practicing hours.");
+        }
+
+        var gapFromStart = (parsedTimeSlot.ToTimeSpan() - appointment.Doctor.ConsultationStartTime.ToTimeSpan()).TotalMinutes;
+        if (gapFromStart % appointment.Doctor.SlotDurationMinutes != 0)
+        {
+            throw new ValidationException("The selected time does not align with the professional's schedule intervals.");
+        }
+
+        var isSlotOccupied = await databaseContext.Appointments.AnyAsync(
+            a =>
+                a.DoctorId == appointment.DoctorId &&
+                a.AppointmentDate == request.AppointmentDate &&
+                a.TimeSlot == parsedTimeSlot &&
+                a.AppointmentId != appointment.AppointmentId &&
+                a.Status != AppointmentStatus.Cancelled,
+            cancelToken);
+
+        if (isSlotOccupied)
+        {
+            throw new ConflictException("The chosen time slot has already been reserved by another patient.");
+        }
+
+        appointment.AppointmentDate = request.AppointmentDate;
+        appointment.TimeSlot = parsedTimeSlot;
+        appointment.ReasonForVisit = request.ReasonForVisit?.Trim() ?? appointment.ReasonForVisit;
+        appointment.Status = AppointmentStatus.Booked;
+        appointment.CancellationReason = null;
+        appointment.CancelledAtUtc = null;
+
+        await databaseContext.SaveChangesAsync(cancelToken);
+        return TransformToDto(appointment);
+    }
+
     public async Task<AppointmentResponseDto> UpdateAppointmentStatusAsync(
         int appointmentId,
         UpdateAppointmentStatusDto statusDto,

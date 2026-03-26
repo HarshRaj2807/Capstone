@@ -28,6 +28,8 @@ public sealed class DoctorResponseDto
 
     public string? ProfileImagePath { get; set; }
 
+    public bool IsActive { get; set; }
+
     public IReadOnlyCollection<SlotDto> AvailableSlots { get; set; } = Array.Empty<SlotDto>();
 }
 

@@ -82,6 +82,31 @@ import {
               }
             </div>
 
+            @if (appointment.status !== 'Cancelled' && appointment.status !== 'Completed') {
+              <div class="reschedule-panel">
+                <h4>Reschedule</h4>
+                <div class="reschedule-fields">
+                  <label>
+                    New Date
+                    <input
+                      type="date"
+                      [value]="getRescheduleDraftById(appointment.appointmentId).appointmentDate"
+                      (change)="updateRescheduleDraft(appointment.appointmentId, 'appointmentDate', $any($event.target).value)" />
+                  </label>
+                  <label>
+                    New Time
+                    <input
+                      type="time"
+                      [value]="getRescheduleDraftById(appointment.appointmentId).timeSlot"
+                      (change)="updateRescheduleDraft(appointment.appointmentId, 'timeSlot', $any($event.target).value)" />
+                  </label>
+                </div>
+                <button type="button" class="secondary" (click)="rescheduleAppointment(appointment)">
+                  Reschedule Appointment
+                </button>
+              </div>
+            }
+
             @if (appointment.canRate) {
               <div class="rating-panel">
                 <h4>Rate this consultation</h4>
@@ -156,11 +181,14 @@ import {
     .note { margin: 0 0 1rem; color: #424245; font-size: 0.95rem; }
     .note strong { color: #1d1d1f; font-weight: 500; }
     .card-actions { display: flex; justify-content: flex-end; }
+    .reschedule-panel { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 0, 0, 0.08); display: grid; gap: 0.75rem; }
+    .reschedule-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .reschedule-panel button { align-self: start; }
     .rating-panel { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 0, 0, 0.08); display: grid; gap: 1rem; }
     .rating-fields { display: grid; grid-template-columns: 14rem 1fr; gap: 1rem; }
     label { display: grid; gap: 0.4rem; color: #424245; font-weight: 500; font-size: 0.95rem; }
     .full-width { grid-column: 1 / -1; }
-    @media (max-width: 860px) { .page-header, .card-header, .status-filter, .details-grid, .rating-fields { grid-template-columns: 1fr; display: grid; } .card-actions { justify-content: stretch; } }
+    @media (max-width: 860px) { .page-header, .card-header, .status-filter, .details-grid, .rating-fields, .reschedule-fields { grid-template-columns: 1fr; display: grid; } .card-actions { justify-content: stretch; } }
   `]
 })
 export class AppointmentsPageComponent implements OnInit {
@@ -172,6 +200,7 @@ export class AppointmentsPageComponent implements OnInit {
   readonly errorNotification = signal('');
   readonly successNotification = signal('');
   readonly pendingReviewDrafts = signal<Record<number, { ratingValue: number; reviewComment: string }>>({});
+  readonly rescheduleDrafts = signal<Record<number, { appointmentDate: string; timeSlot: string }>>({});
   readonly isConfirmationPopupVisible = signal(false);
   readonly confirmationPopupTitle = signal('');
   readonly confirmationPopupMessage = signal('');
@@ -193,7 +222,10 @@ export class AppointmentsPageComponent implements OnInit {
     this.successNotification.set('');
 
     this.appointmentApi.fetchAppointments(this.appointmentStatusFilterForm.getRawValue().status || undefined).subscribe({
-      next: (response: PagedResponse<Appointment>) => this.listOfAppointments.set(response.items),
+      next: (response: PagedResponse<Appointment>) => {
+        this.listOfAppointments.set(response.items);
+        this.initializeRescheduleDrafts(response.items);
+      },
       error: (err: any) =>
         this.errorNotification.set(err.error?.message ?? 'A problem occurred while retrieving your appointments.')
     });
@@ -219,6 +251,52 @@ export class AppointmentsPageComponent implements OnInit {
       error: (err: any) =>
         this.errorNotification.set(err.error?.message ?? 'There was an issue cancelling the appointment.')
     });
+  }
+
+  /**
+   * Retrieves or initializes a reschedule draft for a specific appointment ID.
+   */
+  getRescheduleDraftById(id: number): { appointmentDate: string; timeSlot: string } {
+    return this.rescheduleDrafts()[id] ?? { appointmentDate: '', timeSlot: '' };
+  }
+
+  /**
+   * Updates the reschedule draft for a specific appointment.
+   */
+  updateRescheduleDraft(id: number, field: 'appointmentDate' | 'timeSlot', value: string): void {
+    const draft = this.getRescheduleDraftById(id);
+    this.rescheduleDrafts.set({
+      ...this.rescheduleDrafts(),
+      [id]: {
+        ...draft,
+        [field]: value
+      }
+    });
+  }
+
+  /**
+   * Sends a reschedule request to the API.
+   */
+  rescheduleAppointment(item: Appointment): void {
+    const draft = this.getRescheduleDraftById(item.appointmentId);
+    if (!draft.appointmentDate || !draft.timeSlot) {
+      this.errorNotification.set('Please select a new date and time slot before rescheduling.');
+      return;
+    }
+
+    this.appointmentApi
+      .rescheduleAppointment(item.appointmentId, {
+        appointmentDate: draft.appointmentDate,
+        timeSlot: draft.timeSlot
+      })
+      .subscribe({
+        next: () => {
+          this.successNotification.set('Appointment rescheduled successfully.');
+          this.fetchAppointmentsFromApi();
+        },
+        error: (err: any) =>
+          this.errorNotification.set(err.error?.message ?? 'Unable to reschedule the appointment right now.')
+      });
   }
 
   /**
@@ -300,5 +378,17 @@ export class AppointmentsPageComponent implements OnInit {
     this.confirmationPopupMessage.set(body);
     this.confirmationPopupDetails.set(info);
     this.isConfirmationPopupVisible.set(true);
+  }
+
+  private initializeRescheduleDrafts(appointments: Appointment[]): void {
+    this.rescheduleDrafts.set(
+      appointments.reduce<Record<number, { appointmentDate: string; timeSlot: string }>>((drafts, appointment) => {
+        drafts[appointment.appointmentId] = {
+          appointmentDate: appointment.appointmentDate,
+          timeSlot: appointment.timeSlot
+        };
+        return drafts;
+      }, {})
+    );
   }
 }

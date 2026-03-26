@@ -11,7 +11,9 @@ namespace Fracto.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public sealed class AuthController(IAuthService securityService) : ControllerBase
+public sealed class AuthController(
+    IAuthService securityService,
+    IWebHostEnvironment environment) : ControllerBase
 {
     /// <summary>
     /// Registers a new user.
@@ -24,8 +26,9 @@ public sealed class AuthController(IAuthService securityService) : ControllerBas
         [FromBody] RegisterRequestDto registrationData,
         CancellationToken token)
     {
-        var result = await securityService.RegisterAsync(registrationData, token);
-        return Ok(result);
+        var session = await securityService.RegisterAsync(registrationData, token);
+        SetRefreshTokenCookie(session.RefreshToken, session.RefreshTokenExpiresAtUtc);
+        return Ok(session.Auth);
     }
 
     /// <summary>
@@ -39,8 +42,28 @@ public sealed class AuthController(IAuthService securityService) : ControllerBas
         [FromBody] LoginRequestDto loginData,
         CancellationToken token)
     {
-        var result = await securityService.LoginAsync(loginData, token);
-        return Ok(result);
+        var session = await securityService.LoginAsync(loginData, token);
+        SetRefreshTokenCookie(session.RefreshToken, session.RefreshTokenExpiresAtUtc);
+        return Ok(session.Auth);
+    }
+
+    /// <summary>
+    /// Refreshes an access token using a valid refresh token cookie or body value.
+    /// </summary>
+    [HttpPost("refresh")]
+    public async Task<ActionResult<AuthResponseDto>> RefreshSession(
+        [FromBody] RefreshRequestDto? refreshRequest,
+        CancellationToken token)
+    {
+        var refreshToken = refreshRequest?.RefreshToken ?? Request.Cookies["fracto.refresh"];
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return Unauthorized(new { message = "Refresh token is missing." });
+        }
+
+        var session = await securityService.RefreshAsync(refreshToken, token);
+        SetRefreshTokenCookie(session.RefreshToken, session.RefreshTokenExpiresAtUtc);
+        return Ok(session.Auth);
     }
 
     /// <summary>
@@ -54,6 +77,32 @@ public sealed class AuthController(IAuthService securityService) : ControllerBas
     {
         var userProfile = await securityService.GetCurrentUserAsync(User.GetUserId(), token);
         return Ok(userProfile);
+    }
+
+    /// <summary>
+    /// Updates the profile information for the current user.
+    /// </summary>
+    [Authorize]
+    [HttpPut("me")]
+    public async Task<ActionResult<UserSummaryDto>> UpdateCurrentUserProfile(
+        [FromBody] UpdateProfileRequestDto request,
+        CancellationToken token)
+    {
+        var updatedProfile = await securityService.UpdateProfileAsync(User.GetUserId(), request, token);
+        return Ok(updatedProfile);
+    }
+
+    /// <summary>
+    /// Allows the user to change their password after verifying the current password.
+    /// </summary>
+    [Authorize]
+    [HttpPut("change-password")]
+    public async Task<ActionResult<object>> ChangePassword(
+        [FromBody] ChangePasswordRequestDto request,
+        CancellationToken token)
+    {
+        await securityService.ChangePasswordAsync(User.GetUserId(), request, token);
+        return Ok(new { message = "Password updated successfully." });
     }
 
     /// <summary>
@@ -75,5 +124,48 @@ public sealed class AuthController(IAuthService securityService) : ControllerBas
             message = "Profile photo has been successfully updated.",
             path = storedPath
         });
+    }
+
+    /// <summary>
+    /// Logs out the current user by revoking the refresh token and clearing the cookie.
+    /// </summary>
+    [HttpPost("logout")]
+    public async Task<ActionResult<object>> Logout(CancellationToken token)
+    {
+        var refreshToken = Request.Cookies["fracto.refresh"];
+        if (!string.IsNullOrWhiteSpace(refreshToken))
+        {
+            await securityService.LogoutAsync(refreshToken, token);
+        }
+
+        ClearRefreshTokenCookie();
+        return Ok(new { message = "Logged out successfully." });
+    }
+
+    private void SetRefreshTokenCookie(string refreshToken, DateTime expiresAtUtc)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = environment.IsProduction(),
+            SameSite = SameSiteMode.Lax,
+            Expires = expiresAtUtc,
+            Path = "/api/auth"
+        };
+
+        Response.Cookies.Append("fracto.refresh", refreshToken, cookieOptions);
+    }
+
+    private void ClearRefreshTokenCookie()
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = environment.IsProduction(),
+            SameSite = SameSiteMode.Lax,
+            Path = "/api/auth"
+        };
+
+        Response.Cookies.Delete("fracto.refresh", cookieOptions);
     }
 }

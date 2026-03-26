@@ -6,6 +6,7 @@ import { AppointmentsPageComponent } from './features/appointments/appointments-
 import { AuthPageComponent } from './features/auth/auth-page.component';
 import { DoctorsPageComponent } from './features/doctors/doctors-page.component';
 import { PaymentPageComponent } from './features/payment/payment-page.component';
+import { ProfilePageComponent } from './features/profile/profile-page.component';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'login' },
@@ -19,6 +20,7 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   { path: 'payment', component: PaymentPageComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfilePageComponent, canActivate: [authGuard] },
   { path: 'appointments', component: AppointmentsPageComponent, canActivate: [authGuard] },
   { path: 'admin', component: AdminPageComponent, canActivate: [adminGuard] },
   { path: '**', redirectTo: 'login' }

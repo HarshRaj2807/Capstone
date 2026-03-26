@@ -14,6 +14,7 @@ export interface Doctor {
   consultationEndTime: string;
   slotDurationMinutes: number;
   profileImagePath?: string | null;
+  isActive: boolean;
   availableSlots: Array<{ time: string; isAvailable: boolean }>;
 }
 
@@ -21,6 +22,12 @@ export interface Specialization {
   specializationId: number;
   specializationName: string;
   description?: string | null;
+}
+
+export interface SpecializationFormValue {
+  specializationName: string;
+  description?: string | null;
+  isActive: boolean;
 }
 
 export interface DoctorFormValue {

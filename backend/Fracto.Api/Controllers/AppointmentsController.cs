@@ -84,6 +84,29 @@ public sealed class AppointmentsController(IAppointmentService serviceForAppoint
     }
 
     /// <summary>
+    /// Reschedules an appointment to a new date and time slot.
+    /// </summary>
+    /// <param name="appointmentId">The appointment identifier.</param>
+    /// <param name="request">New scheduling details.</param>
+    /// <param name="token">Cancellation token.</param>
+    /// <returns>The updated appointment details.</returns>
+    [HttpPut("{appointmentId:int}/reschedule")]
+    public async Task<ActionResult<AppointmentResponseDto>> RescheduleAppointment(
+        int appointmentId,
+        [FromBody] RescheduleAppointmentRequestDto request,
+        CancellationToken token)
+    {
+        var updated = await serviceForAppointments.RescheduleAppointmentAsync(
+            appointmentId,
+            User.GetUserId(),
+            User.GetUserRole(),
+            request,
+            token);
+
+        return Ok(updated);
+    }
+
+    /// <summary>
     /// Allows administrative staff to update the lifecycle status of an appointment.
     /// </summary>
     /// <param name="appointmentId">The unique identifier of the appointment.</param>

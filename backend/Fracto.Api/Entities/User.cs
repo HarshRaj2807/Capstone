@@ -38,4 +38,6 @@ public sealed class User
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
     public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
+
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

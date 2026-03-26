@@ -27,3 +27,15 @@ export interface LoginRequest {
   email: string;
   password: string;
 }
+
+export interface UpdateProfileRequest {
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string | null;
+  city?: string | null;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}

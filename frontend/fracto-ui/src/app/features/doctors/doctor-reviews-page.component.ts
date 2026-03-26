@@ -12,7 +12,7 @@ import { Doctor, DoctorRatingsResponse } from '../../core/models/doctor.models';
     <section class="page-shell">
       <header class="page-header">
         <div class="header-left">
-          <a routerLink="/doctors" class="back-link">← Back to Doctors</a>
+          <a routerLink="/doctors" class="back-link"><- Back to Doctors</a>
           <p class="eyebrow">Patient Feedback</p>
           <h1>Reviews for {{ doctorName() }}</h1>
         </div>
@@ -55,7 +55,7 @@ import { Doctor, DoctorRatingsResponse } from '../../core/models/doctor.models';
                     <p class="date">{{ review.createdAtUtc | date: 'longDate' }}</p>
                   </div>
                 </div>
-                <div class="rating-badge">{{ review.ratingValue }} ★</div>
+                <div class="rating-badge">{{ review.ratingValue }} *</div>
               </div>
               <p class="comment">{{ review.reviewComment || 'No comment provided.' }}</p>
             </article>
@@ -211,3 +211,7 @@ export class DoctorReviewsPageComponent implements OnInit {
     });
   }
 }
+
+
+
+

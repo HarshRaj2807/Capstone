@@ -12,6 +12,7 @@ Fracto UI is the Angular frontend for the Fracto doctor appointment booking syst
 - appointments page for tracking and cancellation
 - doctor rating flow
 - admin pages for management tasks
+- profile management and password updates
 
 ## Run the frontend
 
@@ -33,6 +34,14 @@ npm run build
 ```
 
 The production build output is generated in the `dist/` folder.
+
+## Run E2E tests (Playwright)
+
+Start the backend and frontend first, then run:
+
+```bash
+npm run e2e
+```
 
 ## Backend connection
 

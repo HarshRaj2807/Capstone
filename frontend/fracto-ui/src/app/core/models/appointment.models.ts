@@ -19,6 +19,12 @@ export interface BookAppointmentRequest {
   reasonForVisit?: string | null;
 }
 
+export interface RescheduleAppointmentRequest {
+  appointmentDate: string;
+  timeSlot: string;
+  reasonForVisit?: string | null;
+}
+
 export interface UpdateAppointmentStatusRequest {
   status: string;
   cancellationReason?: string | null;

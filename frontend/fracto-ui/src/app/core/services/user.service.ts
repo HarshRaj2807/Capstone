@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../config/api.config';
 import { PagedResponse } from '../models/shared.models';
-import { UserListItem } from '../models/user.models';
+import { UserDetail, UserFormValue, UserListItem } from '../models/user.models';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -14,8 +14,24 @@ export class UserService {
    * @returns An observable of PagedResponse containing UserListItem.
    */
   retrieveRegisteredUsers(): Observable<PagedResponse<UserListItem>> {
-    const params = new HttpParams().set('pageNumber', 1).set('pageSize', 50);
+    const params = new HttpParams().set('pNum', 1).set('pSize', 50);
     return this.http.get<PagedResponse<UserListItem>>(`${API_BASE_URL}/users`, { params });
+  }
+
+  getUserById(userId: number): Observable<UserDetail> {
+    return this.http.get<UserDetail>(`${API_BASE_URL}/users/${userId}`);
+  }
+
+  createUser(payload: UserFormValue): Observable<UserDetail> {
+    return this.http.post<UserDetail>(`${API_BASE_URL}/users`, payload);
+  }
+
+  updateUser(userId: number, payload: UserFormValue): Observable<UserDetail> {
+    return this.http.put<UserDetail>(`${API_BASE_URL}/users/${userId}`, payload);
+  }
+
+  deleteUser(userId: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${API_BASE_URL}/users/${userId}`);
   }
 
   /**

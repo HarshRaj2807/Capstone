@@ -20,9 +20,12 @@ public sealed class RegisterRequestDto
     [Required]
     [MinLength(8)]
     [MaxLength(100)]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$",
+        ErrorMessage = "Password must contain uppercase, lowercase, number, and symbol.")]
     public string Password { get; set; } = string.Empty;
 
     [MaxLength(20)]
+    [RegularExpression(@"^\+?[0-9]{7,15}$", ErrorMessage = "Phone number must contain 7-15 digits.")]
     public string? PhoneNumber { get; set; }
 
     [MaxLength(100)]

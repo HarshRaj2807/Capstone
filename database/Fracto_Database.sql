@@ -17,6 +17,10 @@ IF OBJECT_ID(N'dbo.Appointments', N'U') IS NOT NULL
     DROP TABLE dbo.Appointments;
 GO
 
+IF OBJECT_ID(N'dbo.RefreshTokens', N'U') IS NOT NULL
+    DROP TABLE dbo.RefreshTokens;
+GO
+
 IF OBJECT_ID(N'dbo.Doctors', N'U') IS NOT NULL
     DROP TABLE dbo.Doctors;
 GO
@@ -46,6 +50,21 @@ CREATE TABLE dbo.Users
     UpdatedAtUtc DATETIME2 NULL,
     CONSTRAINT UQ_Users_Email UNIQUE (Email),
     CONSTRAINT CK_Users_Role CHECK ([Role] IN (N'User', N'Admin'))
+);
+GO
+
+-- Refresh tokens allow secure session renewal without re-entering credentials.
+CREATE TABLE dbo.RefreshTokens
+(
+    RefreshTokenId INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+    UserId INT NOT NULL,
+    TokenHash CHAR(64) NOT NULL,
+    ExpiresAtUtc DATETIME2 NOT NULL,
+    CreatedAtUtc DATETIME2 NOT NULL CONSTRAINT DF_RefreshTokens_CreatedAtUtc DEFAULT (SYSUTCDATETIME()),
+    RevokedAtUtc DATETIME2 NULL,
+    ReplacedByTokenHash CHAR(64) NULL,
+    CONSTRAINT FK_RefreshTokens_Users FOREIGN KEY (UserId)
+        REFERENCES dbo.Users (UserId)
 );
 GO
 
@@ -134,6 +153,15 @@ GO
 
 CREATE INDEX IX_Users_Role
     ON dbo.Users ([Role]);
+GO
+
+-- Refresh token lookups and revocation checks.
+CREATE UNIQUE INDEX IX_RefreshTokens_TokenHash
+    ON dbo.RefreshTokens (TokenHash);
+GO
+
+CREATE INDEX IX_RefreshTokens_UserId
+    ON dbo.RefreshTokens (UserId);
 GO
 
 -- Ensure specialization names remain unique and searchable.

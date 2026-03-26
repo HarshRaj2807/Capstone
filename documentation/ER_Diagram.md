@@ -10,6 +10,7 @@ This file is the visual relationship reference for the Fracto data model.
 ```mermaid
 erDiagram
     USERS ||--o{ APPOINTMENTS : books
+    USERS ||--o{ REFRESHTOKENS : has
     DOCTORS ||--o{ APPOINTMENTS : receives
     SPECIALIZATIONS ||--o{ DOCTORS : classifies
     USERS ||--o{ RATINGS : writes
@@ -29,6 +30,16 @@ erDiagram
         bool IsActive
         datetime CreatedAtUtc
         datetime UpdatedAtUtc
+    }
+
+    REFRESHTOKENS {
+        int RefreshTokenId PK
+        int UserId FK
+        string TokenHash UK
+        datetime ExpiresAtUtc
+        datetime CreatedAtUtc
+        datetime RevokedAtUtc
+        string ReplacedByTokenHash
     }
 
     SPECIALIZATIONS {
@@ -85,6 +96,7 @@ erDiagram
 ```mermaid
 flowchart LR
     U[Users] -->|book| A[Appointments]
+    U -->|refresh| RT[RefreshTokens]
     D[Doctors] -->|fulfil| A
     S[Specializations] -->|categorize| D
     A -->|optional post-visit feedback| R[Ratings]
@@ -95,6 +107,7 @@ flowchart LR
 ## Cardinality Summary
 
 - `Users 1 -> many Appointments`: one user can book many appointments.
+- `Users 1 -> many RefreshTokens`: a user can have multiple active refresh tokens over time.
 - `Doctors 1 -> many Appointments`: one doctor can have many appointments over time.
 - `Specializations 1 -> many Doctors`: each doctor belongs to one specialization.
 - `Users 1 -> many Ratings`: a user can submit ratings across different completed appointments.

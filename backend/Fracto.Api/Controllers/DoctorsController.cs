@@ -25,9 +25,19 @@ public sealed class DoctorsController(IDoctorService medicalProfessionalService)
     public async Task<ActionResult<PagedResponse<DoctorResponseDto>>> GetAllDoctors(
         [FromQuery] int pIndex = 1,
         [FromQuery] int pSize = 10,
+        [FromQuery] bool includeInactive = false,
         CancellationToken token = default)
     {
-        var resultList = await medicalProfessionalService.GetDoctorsAsync(null, null, null, null, pIndex, pSize, token);
+        var allowInactive = includeInactive && User.IsInRole("Admin");
+        var resultList = await medicalProfessionalService.GetDoctorsAsync(
+            null,
+            null,
+            null,
+            null,
+            pIndex,
+            pSize,
+            allowInactive,
+            token);
         return Ok(resultList);
     }
 
@@ -59,6 +69,7 @@ public sealed class DoctorsController(IDoctorService medicalProfessionalService)
             preferredDate,
             pIndex,
             pSize,
+            false,
             token);
 
         return Ok(filteredResult);

@@ -12,10 +12,11 @@ export class DoctorService {
   /**
    * Retrieves a paginated list of all medical professionals.
    */
-  retrieveAllDoctors(pIndex = 1, pSize = 10): Observable<PagedResponse<Doctor>> {
+  retrieveAllDoctors(pIndex = 1, pSize = 10, includeInactive = false): Observable<PagedResponse<Doctor>> {
     const queryParams = new HttpParams()
       .set('pIndex', pIndex)
-      .set('pSize', pSize);
+      .set('pSize', pSize)
+      .set('includeInactive', includeInactive);
 
     return this.http.get<PagedResponse<Doctor>>(`${API_BASE_URL}/doctors`, { params: queryParams });
   }

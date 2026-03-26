@@ -42,7 +42,8 @@ public sealed class DoctorServiceTests
             minRating: 4.5m,
             appointmentDate: null,
             pageNumber: 0,
-            pageSize: 999);
+            pageSize: 999,
+            includeInactive: false);
 
         Assert.Equal(1, result.PageNumber);
         Assert.Equal(50, result.PageSize);
@@ -103,7 +104,8 @@ public sealed class DoctorServiceTests
 
         var slots = await service.GetAvailableSlotsAsync(doctorId, appointmentDate);
 
-        Assert.Equal(new[] { "09:00", "10:00", "10:30" }, slots.ToArray());
+        var availableSlots = slots.Where(slot => slot.IsAvailable).Select(slot => slot.Time).ToArray();
+        Assert.Equal(new[] { "09:00", "10:00", "10:30" }, availableSlots);
     }
 
     [Fact]

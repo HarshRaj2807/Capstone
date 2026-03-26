@@ -13,6 +13,7 @@ public interface IDoctorService
         DateOnly? appointmentDate,
         int pageNumber,
         int pageSize,
+        bool includeInactive = false,
         CancellationToken cancellationToken = default);
 
     Task<DoctorResponseDto> GetDoctorByIdAsync(int doctorId, CancellationToken cancellationToken = default);

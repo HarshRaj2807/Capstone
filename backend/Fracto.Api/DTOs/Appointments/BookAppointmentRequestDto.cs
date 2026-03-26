@@ -11,6 +11,7 @@ public sealed class BookAppointmentRequestDto
     public DateOnly AppointmentDate { get; set; }
 
     [Required]
+    [RegularExpression(@"^\d{2}:\d{2}$", ErrorMessage = "Time slot must be in HH:mm format.")]
     public string TimeSlot { get; set; } = string.Empty;
 
     [MaxLength(500)]

@@ -7,8 +7,8 @@ import { DoctorService } from '../../core/services/doctor.service';
 import { SpecializationService } from '../../core/services/specialization.service';
 import { UserService } from '../../core/services/user.service';
 import { Appointment } from '../../core/models/appointment.models';
-import { Doctor, DoctorFormValue, Specialization } from '../../core/models/doctor.models';
-import { UserListItem } from '../../core/models/user.models';
+import { Doctor, DoctorFormValue, Specialization, SpecializationFormValue } from '../../core/models/doctor.models';
+import { UserDetail, UserFormValue, UserListItem } from '../../core/models/user.models';
 
 @Component({
   selector: 'app-admin-page',
@@ -24,6 +24,9 @@ import { UserListItem } from '../../core/models/user.models';
 
         <div class="tab-switcher">
           <button [class.active]="activeTab() === 'doctors'" (click)="setTab('doctors')">Doctors</button>
+          <button [class.active]="activeTab() === 'specializations'" (click)="setTab('specializations')">
+            Specializations
+          </button>
           <button [class.active]="activeTab() === 'appointments'" (click)="setTab('appointments')">
             Appointments
           </button>
@@ -123,12 +126,67 @@ import { UserListItem } from '../../core/models/user.models';
                 <div class="list-item">
                   <div>
                     <h3>{{ doctor.fullName }}</h3>
-                    <p>{{ doctor.specializationName }} · {{ doctor.city }}</p>
+                    <p>{{ doctor.specializationName }} - {{ doctor.city }}</p>
                   </div>
 
                   <div class="item-actions">
                     <button type="button" class="secondary" (click)="editDoctor(doctor)">Edit</button>
                     <button type="button" class="danger" (click)="deleteDoctor(doctor.doctorId)">Delete</button>
+                  </div>
+                </div>
+              }
+            </div>
+          </article>
+        </div>
+      }
+
+      @if (activeTab() === 'specializations') {
+        <div class="admin-grid">
+          <article class="form-card">
+            <div class="section-heading">
+              <h2>{{ editingSpecializationId() ? 'Edit Specialization' : 'Create Specialization' }}</h2>
+              <button type="button" class="secondary" (click)="resetSpecializationForm()">Clear Form</button>
+            </div>
+
+            <form [formGroup]="specializationForm" (ngSubmit)="saveSpecialization()">
+              <label>
+                Specialization Name
+                <input type="text" formControlName="specializationName" placeholder="Enter specialization name" />
+              </label>
+
+              <label>
+                Description
+                <textarea rows="3" formControlName="description" placeholder="Describe this specialization"></textarea>
+              </label>
+
+              <label class="checkbox">
+                <input type="checkbox" formControlName="isActive" />
+                Keep this specialization active
+              </label>
+
+              <button type="submit">
+                {{ editingSpecializationId() ? 'Update Specialization' : 'Create Specialization' }}
+              </button>
+            </form>
+          </article>
+
+          <article class="list-card">
+            <div class="section-heading">
+              <h2>Specialization Directory</h2>
+              <span>{{ specializations().length }} records</span>
+            </div>
+
+            <div class="list-stack">
+              @for (spec of specializations(); track spec.specializationId) {
+                <div class="list-item">
+                  <div>
+                    <h3>{{ spec.specializationName }}</h3>
+                    <p>{{ spec.description || 'No description' }}</p>
+                  </div>
+
+                  <div class="item-actions">
+                    <button type="button" class="secondary" (click)="editSpecialization(spec)">Edit</button>
+                    <button type="button" class="danger" (click)="deleteSpecialization(spec.specializationId)">Delete</button>
                   </div>
                 </div>
               }
@@ -148,7 +206,7 @@ import { UserListItem } from '../../core/models/user.models';
             @for (appointment of appointments(); track appointment.appointmentId) {
               <div class="list-item wide">
                 <div>
-                  <h3>{{ appointment.doctorName }} · {{ appointment.userName }}</h3>
+                  <h3>{{ appointment.doctorName }} - {{ appointment.userName }}</h3>
                   <p>{{ appointment.appointmentDate }} at {{ appointment.timeSlot }}</p>
                 </div>
 
@@ -182,27 +240,94 @@ import { UserListItem } from '../../core/models/user.models';
       }
 
       @if (activeTab() === 'users') {
-        <article class="list-card">
-          <div class="section-heading">
-            <h2>User Directory</h2>
-            <span>{{ users().length }} records</span>
-          </div>
+        <div class="admin-grid">
+          <article class="form-card">
+            <div class="section-heading">
+              <h2>{{ editingUserId() ? 'Edit User' : 'Create User' }}</h2>
+              <button type="button" class="secondary" (click)="resetUserForm()">Clear Form</button>
+            </div>
 
-          <div class="list-stack">
-            @for (user of users(); track user.userId) {
-              <div class="list-item">
-                <div>
-                  <h3>{{ user.fullName }}</h3>
-                  <p>{{ user.email }} · {{ user.role }} · {{ user.city || 'No city' }}</p>
-                </div>
+            <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+              <div class="split-fields">
+                <label>
+                  First Name
+                  <input type="text" formControlName="firstName" />
+                </label>
 
-                <button type="button" class="secondary" (click)="toggleUserStatus(user.userId)">
-                  {{ user.isActive ? 'Deactivate' : 'Activate' }}
-                </button>
+                <label>
+                  Last Name
+                  <input type="text" formControlName="lastName" />
+                </label>
               </div>
-            }
-          </div>
-        </article>
+
+              <label>
+                Email
+                <input type="email" formControlName="email" />
+              </label>
+
+              <div class="split-fields">
+                <label>
+                  Role
+                  <select formControlName="role">
+                    <option value="User">User</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </label>
+
+                <label>
+                  Phone Number
+                  <input type="text" formControlName="phoneNumber" />
+                </label>
+              </div>
+
+              <div class="split-fields">
+                <label>
+                  City
+                  <input type="text" formControlName="city" />
+                </label>
+
+                <label>
+                  Password
+                  <input type="password" formControlName="password" placeholder="Set or reset password" />
+                </label>
+              </div>
+
+              <label class="checkbox">
+                <input type="checkbox" formControlName="isActive" />
+                Keep this user active
+              </label>
+
+              <button type="submit">
+                {{ editingUserId() ? 'Update User' : 'Create User' }}
+              </button>
+            </form>
+          </article>
+
+          <article class="list-card">
+            <div class="section-heading">
+              <h2>User Directory</h2>
+              <span>{{ users().length }} records</span>
+            </div>
+
+            <div class="list-stack">
+              @for (user of users(); track user.userId) {
+                <div class="list-item">
+                  <div>
+                    <h3>{{ user.fullName }}</h3>
+                    <p>{{ user.email }} - {{ user.role }} - {{ user.city || 'No city' }}</p>
+                  </div>
+
+                  <div class="item-actions">
+                    <button type="button" class="secondary" (click)="editUser(user)">Edit</button>
+                    <button type="button" class="secondary" (click)="toggleUserStatus(user.userId)">
+                      {{ user.isActive ? 'Deactivate' : 'Activate' }}
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </article>
+        </div>
       }
     </section>
   `,
@@ -225,8 +350,9 @@ import { UserListItem } from '../../core/models/user.models';
     .section-heading span { color: #86868b; font-size: 0.95rem; }
     form, .list-stack { display: grid; gap: 1rem; }
     label { display: grid; gap: 0.4rem; color: #424245; font-weight: 500; font-size: 0.95rem; }
-    input, select { border-radius: 1rem; border: 1px solid rgba(0, 0, 0, 0.1); padding: 0.9rem 1rem; font: inherit; background: rgba(255, 255, 255, 0.6); color: #1d1d1f; transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; }
-    input:focus, select:focus { outline: none; border-color: rgba(0, 102, 204, 0.5); background: rgba(255, 255, 255, 0.9); box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1); }
+    input, select, textarea { border-radius: 1rem; border: 1px solid rgba(0, 0, 0, 0.1); padding: 0.9rem 1rem; font: inherit; background: rgba(255, 255, 255, 0.6); color: #1d1d1f; transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease; }
+    textarea { resize: vertical; min-height: 6rem; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(0, 102, 204, 0.5); background: rgba(255, 255, 255, 0.9); box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1); }
     .split-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     .checkbox { display: flex; align-items: center; gap: 0.6rem; }
     .checkbox input { width: auto; margin: 0; }
@@ -257,25 +383,50 @@ export class AdminPageComponent implements OnInit {
   private readonly appointmentService = inject(AppointmentService);
   private readonly specializationService = inject(SpecializationService);
 
-  readonly activeTab = signal<'doctors' | 'appointments' | 'users'>('doctors');
+  readonly activeTab = signal<'doctors' | 'specializations' | 'appointments' | 'users'>('doctors');
   readonly doctors = signal<Doctor[]>([]);
   readonly users = signal<UserListItem[]>([]);
   readonly appointments = signal<Appointment[]>([]);
   readonly specializations = signal<Specialization[]>([]);
   readonly editingDoctorId = signal<number | null>(null);
+  readonly editingSpecializationId = signal<number | null>(null);
+  readonly editingUserId = signal<number | null>(null);
   readonly errorMessage = signal('');
   readonly message = signal('');
   readonly appointmentDrafts = signal<Record<number, { status: string; cancellationReason: string }>>({});
 
   readonly doctorForm = this.formBuilder.nonNullable.group({
-    fullName: ['', Validators.required],
+    fullName: ['', [Validators.required, Validators.maxLength(200)]],
     specializationId: ['', Validators.required],
-    city: ['', Validators.required],
-    experienceYears: ['', Validators.required],
-    consultationFee: ['', Validators.required],
+    city: ['', [Validators.required, Validators.maxLength(100)]],
+    experienceYears: ['', [Validators.required, Validators.min(0), Validators.max(50)]],
+    consultationFee: ['', [Validators.required, Validators.min(0), Validators.max(100000)]],
     consultationStartTime: ['', Validators.required],
     consultationEndTime: ['', Validators.required],
-    slotDurationMinutes: ['', Validators.required],
+    slotDurationMinutes: ['', [Validators.required, Validators.min(10), Validators.max(120)]],
+    isActive: [true]
+  });
+
+  readonly specializationForm = this.formBuilder.nonNullable.group({
+    specializationName: ['', [Validators.required, Validators.maxLength(150)]],
+    description: ['', [Validators.maxLength(500)]],
+    isActive: [true]
+  });
+
+  readonly userForm = this.formBuilder.nonNullable.group({
+    firstName: ['', [Validators.required, Validators.maxLength(100)]],
+    lastName: ['', [Validators.required, Validators.maxLength(100)]],
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+    role: ['User', Validators.required],
+    phoneNumber: ['', [Validators.pattern(/^\+?[0-9]{7,15}$/)]],
+    city: ['', [Validators.maxLength(100)]],
+    password: [
+      '',
+      [
+        Validators.minLength(8),
+        Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/)
+      ]
+    ],
     isActive: [true]
   });
 
@@ -283,7 +434,7 @@ export class AdminPageComponent implements OnInit {
     this.loadDashboard();
   }
 
-  setTab(tab: 'doctors' | 'appointments' | 'users'): void {
+  setTab(tab: 'doctors' | 'specializations' | 'appointments' | 'users'): void {
     this.activeTab.set(tab);
   }
 
@@ -291,7 +442,7 @@ export class AdminPageComponent implements OnInit {
     this.errorMessage.set('');
 
     forkJoin({
-      doctors: this.doctorService.retrieveAllDoctors(1, 50),
+      doctors: this.doctorService.retrieveAllDoctors(1, 50, true),
       users: this.userService.retrieveRegisteredUsers(),
       appointments: this.appointmentService.fetchAppointments(),
       specializations: this.specializationService.retrieveMedicalSpecialties()
@@ -319,7 +470,7 @@ export class AdminPageComponent implements OnInit {
       consultationStartTime: doctor.consultationStartTime,
       consultationEndTime: doctor.consultationEndTime,
       slotDurationMinutes: String(doctor.slotDurationMinutes),
-      isActive: true
+      isActive: doctor.isActive
     });
   }
 
@@ -384,6 +535,141 @@ export class AdminPageComponent implements OnInit {
       },
       error: (error: any) =>
         this.errorMessage.set(error.error?.message ?? 'Unable to delete the doctor right now.')
+    });
+  }
+
+  editSpecialization(specialization: Specialization): void {
+    this.editingSpecializationId.set(specialization.specializationId);
+    this.specializationForm.setValue({
+      specializationName: specialization.specializationName,
+      description: specialization.description ?? '',
+      isActive: true
+    });
+  }
+
+  resetSpecializationForm(): void {
+    this.editingSpecializationId.set(null);
+    this.specializationForm.setValue({
+      specializationName: '',
+      description: '',
+      isActive: true
+    });
+  }
+
+  saveSpecialization(): void {
+    if (this.specializationForm.invalid) {
+      this.errorMessage.set('Please complete the specialization form before saving.');
+      return;
+    }
+
+    const rawValue = this.specializationForm.getRawValue();
+    const payload: SpecializationFormValue = {
+      specializationName: rawValue.specializationName,
+      description: rawValue.description || null,
+      isActive: rawValue.isActive
+    };
+
+    const request$ = this.editingSpecializationId()
+      ? this.specializationService.updateSpecialization(this.editingSpecializationId()!, payload)
+      : this.specializationService.createSpecialization(payload);
+
+    request$.subscribe({
+      next: () => {
+        this.message.set(
+          this.editingSpecializationId() ? 'Specialization updated successfully.' : 'Specialization created successfully.'
+        );
+        this.resetSpecializationForm();
+        this.loadDashboard();
+      },
+      error: (error: any) =>
+        this.errorMessage.set(error.error?.message ?? 'Unable to save the specialization right now.')
+    });
+  }
+
+  deleteSpecialization(specializationId: number): void {
+    if (!window.confirm('Deactivate this specialization?')) {
+      return;
+    }
+
+    this.specializationService.deleteSpecialization(specializationId).subscribe({
+      next: (response) => {
+        this.message.set(response.message);
+        this.loadDashboard();
+      },
+      error: (error: any) =>
+        this.errorMessage.set(error.error?.message ?? 'Unable to delete the specialization right now.')
+    });
+  }
+
+  editUser(user: UserListItem): void {
+    this.userService.getUserById(user.userId).subscribe({
+      next: (detail: UserDetail) => {
+        this.editingUserId.set(detail.userId);
+        this.userForm.setValue({
+          firstName: detail.firstName,
+          lastName: detail.lastName,
+          email: detail.email,
+          role: detail.role,
+          phoneNumber: detail.phoneNumber ?? '',
+          city: detail.city ?? '',
+          password: '',
+          isActive: detail.isActive
+        });
+      },
+      error: (error) =>
+        this.errorMessage.set(error.error?.message ?? 'Unable to load the user details.')
+    });
+  }
+
+  resetUserForm(): void {
+    this.editingUserId.set(null);
+    this.userForm.setValue({
+      firstName: '',
+      lastName: '',
+      email: '',
+      role: 'User',
+      phoneNumber: '',
+      city: '',
+      password: '',
+      isActive: true
+    });
+  }
+
+  saveUser(): void {
+    if (this.userForm.invalid) {
+      this.errorMessage.set('Please complete the user form before saving.');
+      return;
+    }
+
+    const rawValue = this.userForm.getRawValue();
+    const payload: UserFormValue = {
+      firstName: rawValue.firstName,
+      lastName: rawValue.lastName,
+      email: rawValue.email,
+      role: rawValue.role as UserFormValue['role'],
+      phoneNumber: rawValue.phoneNumber || null,
+      city: rawValue.city || null,
+      isActive: rawValue.isActive,
+      password: rawValue.password || null
+    };
+
+    if (!this.editingUserId() && !payload.password) {
+      this.errorMessage.set('Password is required when creating a new user.');
+      return;
+    }
+
+    const request$ = this.editingUserId()
+      ? this.userService.updateUser(this.editingUserId()!, payload)
+      : this.userService.createUser(payload);
+
+    request$.subscribe({
+      next: () => {
+        this.message.set(this.editingUserId() ? 'User updated successfully.' : 'User created successfully.');
+        this.resetUserForm();
+        this.loadDashboard();
+      },
+      error: (error: any) =>
+        this.errorMessage.set(error.error?.message ?? 'Unable to save the user right now.')
     });
   }
 
@@ -465,3 +751,4 @@ export class AdminPageComponent implements OnInit {
     );
   }
 }
+

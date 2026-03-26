@@ -228,6 +228,7 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
     
     .ghost-link.accent:hover {
       background: #ffffff;
+      color: #1d1d1f;
     }
 
     .feedback {

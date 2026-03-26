@@ -15,6 +15,8 @@ public sealed class FractoDbContext(DbContextOptions<FractoDbContext> options) :
 
     public DbSet<Rating> Ratings => Set<Rating>();
 
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(entity =>
@@ -22,6 +24,19 @@ public sealed class FractoDbContext(DbContextOptions<FractoDbContext> options) :
             entity.HasKey(user => user.UserId);
             entity.HasIndex(user => user.Email).IsUnique();
             entity.Property(user => user.Role).HasConversion<string>().HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(token => token.RefreshTokenId);
+            entity.HasIndex(token => token.TokenHash).IsUnique();
+            entity.HasIndex(token => token.UserId);
+            entity.Property(token => token.TokenHash).HasMaxLength(64);
+            entity.Property(token => token.ReplacedByTokenHash).HasMaxLength(64);
+            entity.HasOne(token => token.User)
+                .WithMany(user => user.RefreshTokens)
+                .HasForeignKey(token => token.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Specialization>(entity =>

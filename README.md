@@ -25,14 +25,16 @@ Fracto brings the main parts of appointment booking into a single workflow:
 ## Core Features
 
 - secure login and registration
-- JWT-based authentication and authorization
+- JWT-based authentication and authorization with refresh tokens
 - doctor discovery and filtering
 - slot-based appointment booking
+- appointment rescheduling
 - consultation fee payment page
 - booking confirmation popup
 - appointment cancellation
 - doctor ratings and reviews
-- admin dashboard functionality
+- admin dashboard functionality for doctors, users, and specializations
+- profile management with photo upload
 - Swagger support for API testing
 
 ## Technology Stack
@@ -100,6 +102,31 @@ You can use these seeded accounts to explore the main flows quickly:
 | --- | --- | --- |
 | Admin | `admin@fracto.com` | `Admin@123` |
 | User | `user@fracto.com` | `User@123` |
+
+## Testing
+
+### Backend (xUnit)
+
+```bash
+cd Capstone/tests
+dotnet test
+```
+
+### Frontend (unit tests)
+
+```bash
+cd Capstone/frontend/fracto-ui
+npm test
+```
+
+### End-to-End (Playwright)
+
+Start the backend and frontend first, then run:
+
+```bash
+cd Capstone/frontend/fracto-ui
+npm run e2e
+```
 
 ## Repository Structure
 

@@ -6,7 +6,7 @@ Fracto uses JWT bearer authentication to protect user and admin API operations w
 
 ## Scope
 
-This file explains token generation, client-side session storage, interceptor behavior, guards, and backend validation.
+This file explains token generation, refresh tokens, client-side session storage, interceptor behavior, guards, and backend validation.
 
 - For concrete auth endpoint payloads, see [REST_API_Design.md](./REST_API_Design.md).
 - For the wider application architecture, see [Fracto_Project_Report.md](./Fracto_Project_Report.md).
@@ -77,6 +77,12 @@ fracto.auth.session
 
 This allows the application to restore the session after a browser refresh.
 
+### 4.1 Refresh Tokens (Session Renewal)
+
+In addition to the access token, the backend issues a refresh token stored in an HTTP-only cookie. The frontend uses `POST /api/auth/refresh` to rotate the refresh token and receive a new access token when the current one expires.
+
+This improves session handling without exposing long-lived tokens to JavaScript.
+
 ### 5. Attaching the Token to API Requests
 
 The Angular auth interceptor reads the token from `AuthService` and adds this header automatically:
@@ -120,6 +126,7 @@ sequenceDiagram
     participant S as AuthService
     participant J as JwtTokenGenerator
     participant LS as localStorage
+    participant RT as Refresh Token Cookie
 
     U->>UI: Submit login form
     UI->>API: POST /api/auth/login
@@ -129,6 +136,7 @@ sequenceDiagram
     S-->>API: Auth response DTO
     API-->>UI: Session payload
     UI->>LS: Store fracto.auth.session
+    API-->>RT: Set refresh token cookie
     UI->>UI: Navigate by role
 ```
 

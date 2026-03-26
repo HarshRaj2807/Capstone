@@ -18,6 +18,7 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
         DateOnly? appointmentDate,
         int pageNumber,
         int pageSize,
+        bool includeInactive = false,
         CancellationToken cancellationToken = default)
     {
         pageNumber = Math.Max(pageNumber, 1);
@@ -26,8 +27,12 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
         var query = dbContext.Doctors
             .AsNoTracking()
             .Include(doctor => doctor.Specialization)
-            .Where(doctor => doctor.IsActive)
             .AsQueryable();
+
+        if (!includeInactive)
+        {
+            query = query.Where(doctor => doctor.IsActive);
+        }
 
         if (!string.IsNullOrWhiteSpace(city))
         {
@@ -277,6 +282,7 @@ public sealed class DoctorService(FractoDbContext dbContext) : IDoctorService
             ConsultationEndTime = doctor.ConsultationEndTime.ToString("HH:mm"),
             SlotDurationMinutes = doctor.SlotDurationMinutes,
             ProfileImagePath = doctor.ProfileImagePath,
+            IsActive = doctor.IsActive,
             AvailableSlots = availableSlots ?? Array.Empty<SlotDto>()
         };
 }

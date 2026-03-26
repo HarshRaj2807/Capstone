@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, ReactiveFormsModule, Validators, FormBuilder, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -53,11 +53,17 @@ import { AuthService } from '../../core/services/auth.service';
             <label>
               Email
               <input type="email" formControlName="email" placeholder="name@example.com" />
+              @if (loginForm.controls.email.touched && loginForm.controls.email.invalid) {
+                <span class="field-error">Enter a valid email address.</span>
+              }
             </label>
 
             <label>
               Password
               <input type="password" formControlName="password" placeholder="Enter your password" />
+              @if (loginForm.controls.password.touched && loginForm.controls.password.invalid) {
+                <span class="field-error">Password is required.</span>
+              }
             </label>
 
             <button type="submit" [disabled]="isSubmitting()">
@@ -82,24 +88,43 @@ import { AuthService } from '../../core/services/auth.service';
             <label>
               Email
               <input type="email" formControlName="email" placeholder="name@example.com" />
+              @if (registerForm.controls.email.touched && registerForm.controls.email.invalid) {
+                <span class="field-error">Enter a valid email address.</span>
+              }
             </label>
 
             <div class="split-fields">
               <label>
                 Password
                 <input type="password" formControlName="password" placeholder="Create a password" />
+                @if (registerForm.controls.password.touched && registerForm.controls.password.invalid) {
+                  <span class="field-error">Use 8+ chars with uppercase, number, and symbol.</span>
+                }
               </label>
 
               <label>
-                Phone Number
-                <input type="text" formControlName="phoneNumber" placeholder="Enter phone number" />
+                Confirm Password
+                <input type="password" formControlName="confirmPassword" placeholder="Re-enter password" />
+                @if (registerForm.errors?.passwordMismatch && registerForm.controls.confirmPassword.touched) {
+                  <span class="field-error">Passwords do not match.</span>
+                }
               </label>
             </div>
 
-            <label>
-              City
-              <input type="text" formControlName="city" placeholder="Enter city" />
-            </label>
+            <div class="split-fields">
+              <label>
+                Phone Number
+                <input type="text" formControlName="phoneNumber" placeholder="Enter phone number" />
+                @if (registerForm.controls.phoneNumber.touched && registerForm.controls.phoneNumber.invalid) {
+                  <span class="field-error">Use 7-15 digits, optional + prefix.</span>
+                }
+              </label>
+
+              <label>
+                City
+                <input type="text" formControlName="city" placeholder="Enter city" />
+              </label>
+            </div>
 
             <button type="submit" [disabled]="isSubmitting()">
               {{ isSubmitting() ? 'Creating account...' : 'Create Account' }}
@@ -289,6 +314,12 @@ import { AuthService } from '../../core/services/auth.service';
       letter-spacing: -0.02em;
     }
 
+    .field-error {
+      color: #8c2f17;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
     label {
       display: grid;
       gap: 0.5rem;
@@ -379,14 +410,25 @@ export class AuthPageComponent {
     password: ['', [Validators.required]]
   });
 
-  readonly registerForm = this.formBuilder.nonNullable.group({
-    firstName: ['', [Validators.required]],
-    lastName: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    phoneNumber: [''],
-    city: ['']
-  });
+  readonly registerForm = this.formBuilder.nonNullable.group(
+    {
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
+      email: ['', [Validators.required, Validators.email]],
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(8),
+          Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/)
+        ]
+      ],
+      confirmPassword: ['', [Validators.required]],
+      phoneNumber: ['', [Validators.pattern(/^\+?[0-9]{7,15}$/)]],
+      city: ['']
+    },
+    { validators: [this.passwordMatchValidator] }
+  );
 
   constructor() {
     if (this.authService.isAuthenticated()) {
@@ -431,7 +473,9 @@ export class AuthPageComponent {
     this.isSubmitting.set(true);
     this.errorMessage.set('');
 
-    this.authService.register(this.registerForm.getRawValue()).subscribe({
+    const { confirmPassword, ...payload } = this.registerForm.getRawValue();
+
+    this.authService.register(payload).subscribe({
       next: (response) => {
         this.isSubmitting.set(false);
         this.infoMessage.set(response.message);
@@ -446,5 +490,15 @@ export class AuthPageComponent {
 
   private async navigateByRole(role?: string): Promise<void> {
     await this.router.navigate([role === 'Admin' ? '/admin' : '/doctors']);
+  }
+
+  private passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const password = control.get('password')?.value;
+    const confirmPassword = control.get('confirmPassword')?.value;
+    if (!password || !confirmPassword) {
+      return null;
+    }
+
+    return password === confirmPassword ? null : { passwordMismatch: true };
   }
 }

@@ -18,6 +18,13 @@ public interface IAppointmentService
 
     Task CancelAppointmentAsync(int appointmentId, int userId, UserRole role, string? cancellationReason, CancellationToken cancellationToken = default);
 
+    Task<AppointmentResponseDto> RescheduleAppointmentAsync(
+        int appointmentId,
+        int userId,
+        UserRole role,
+        RescheduleAppointmentRequestDto request,
+        CancellationToken cancellationToken = default);
+
     Task<AppointmentResponseDto> UpdateAppointmentStatusAsync(
         int appointmentId,
         UpdateAppointmentStatusDto request,

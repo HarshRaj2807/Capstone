@@ -162,6 +162,94 @@ Success response:
 }
 ```
 
+### PUT /api/auth/me
+
+- Access: `Authenticated`
+- Purpose: update the current user's profile information
+
+Request body:
+
+```json
+{
+  "firstName": "Harsh",
+  "lastName": "Raj",
+  "phoneNumber": "+919876543210",
+  "city": "Bengaluru"
+}
+```
+
+Success response:
+
+```json
+{
+  "userId": 2,
+  "fullName": "Harsh Raj",
+  "email": "user@fracto.com",
+  "role": "User",
+  "city": "Bengaluru",
+  "profileImagePath": null
+}
+```
+
+### PUT /api/auth/change-password
+
+- Access: `Authenticated`
+- Purpose: update the user's password after validating the current password
+
+Request body:
+
+```json
+{
+  "currentPassword": "User@123",
+  "newPassword": "NewUser@123"
+}
+```
+
+Success response:
+
+```json
+{
+  "message": "Password updated successfully."
+}
+```
+
+### POST /api/auth/refresh
+
+- Access: `Public`
+- Purpose: rotate refresh token and issue a new access token
+- Notes: relies on the HTTP-only refresh cookie; body is optional
+
+Success response:
+
+```json
+{
+  "message": "Session refreshed.",
+  "token": "<jwt-token>",
+  "expiresAtUtc": "2026-03-20T15:30:00Z",
+  "user": {
+    "userId": 2,
+    "fullName": "Harsh Raj",
+    "email": "user@fracto.com",
+    "role": "User",
+    "city": "Bengaluru",
+    "profileImagePath": null
+  }
+}
+```
+
+### POST /api/auth/logout
+
+- Access: `Public`
+- Purpose: revoke the refresh token and clear the cookie
+
+Success response:
+
+```json
+{
+  "message": "Logged out successfully."
+}
+```
+
 ### POST /api/auth/profile-image
 
 - Access: `Authenticated`
@@ -207,6 +295,31 @@ Success response:
 ]
 ```
 
+### POST /api/specializations
+
+- Access: `Admin`
+- Purpose: create a new specialization
+
+Request body:
+
+```json
+{
+  "specializationName": "Orthopedic",
+  "description": "Bone and joint specialist",
+  "isActive": true
+}
+```
+
+### PUT /api/specializations/{id}
+
+- Access: `Admin`
+- Purpose: update an existing specialization
+
+### DELETE /api/specializations/{id}
+
+- Access: `Admin`
+- Purpose: deactivate a specialization
+
 ## Doctor APIs
 
 ### GET /api/doctors
@@ -217,7 +330,7 @@ Success response:
 Example request:
 
 ```text
-GET /api/doctors?pageNumber=1&pageSize=10
+GET /api/doctors?pIndex=1&pSize=10
 ```
 
 Success response:
@@ -257,17 +370,17 @@ Query parameters:
 
 | Name | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `city` | string | no | case-insensitive exact city match |
-| `specializationId` | int | no | specialization filter |
-| `minRating` | decimal | no | minimum average rating |
-| `appointmentDate` | `yyyy-MM-dd` | no | includes generated available slots |
-| `pageNumber` | int | no | default `1` |
-| `pageSize` | int | no | default `10`, clamped by backend |
+| `location` | string | no | case-insensitive exact city match |
+| `specId` | int | no | specialization filter |
+| `ratingFloor` | decimal | no | minimum average rating |
+| `preferredDate` | `yyyy-MM-dd` | no | includes generated available slots |
+| `pIndex` | int | no | default `1` |
+| `pSize` | int | no | default `10`, clamped by backend |
 
 Example request:
 
 ```text
-GET /api/doctors/search?city=Bengaluru&specializationId=1&minRating=4.5&appointmentDate=2026-03-24&pageNumber=1&pageSize=12
+GET /api/doctors/search?location=Bengaluru&specId=1&ratingFloor=4.5&preferredDate=2026-03-24&pIndex=1&pSize=12
 ```
 
 Success response:
@@ -483,9 +596,9 @@ Query parameters:
 
 | Name | Type | Required | Notes |
 | --- | --- | --- | --- |
-| `status` | string | no | `Booked`, `Confirmed`, `Completed`, or `Cancelled` |
-| `pageNumber` | int | no | default `1` |
-| `pageSize` | int | no | default `10` |
+| `appointmentStatus` | string | no | `Booked`, `Confirmed`, `Completed`, or `Cancelled` |
+| `pageNr` | int | no | default `1` |
+| `pageSizeLimit` | int | no | default `10` |
 
 Success response:
 
@@ -591,6 +704,21 @@ Request body:
 }
 ```
 
+### PUT /api/appointments/{id}/reschedule
+
+- Access: `Authenticated`
+- Purpose: reschedule an appointment to a new date/time
+
+Request body:
+
+```json
+{
+  "appointmentDate": "2026-03-25",
+  "timeSlot": "10:30",
+  "reasonForVisit": "Follow-up consultation"
+}
+```
+
 Success response:
 
 ```json
@@ -660,7 +788,7 @@ Validation failure:
 Example request:
 
 ```text
-GET /api/users?pageNumber=1&pageSize=10
+GET /api/users?pNum=1&pSize=10
 ```
 
 Success response:
@@ -696,6 +824,26 @@ Success response:
   "message": "User status updated successfully."
 }
 ```
+
+### GET /api/users/{id}
+
+- Access: `Admin`
+- Purpose: fetch a single user record for admin editing
+
+### POST /api/users
+
+- Access: `Admin`
+- Purpose: create a new user account (admin or user)
+
+### PUT /api/users/{id}
+
+- Access: `Admin`
+- Purpose: update an existing user
+
+### DELETE /api/users/{id}
+
+- Access: `Admin`
+- Purpose: deactivate a user account
 
 ## Common Status Codes
 

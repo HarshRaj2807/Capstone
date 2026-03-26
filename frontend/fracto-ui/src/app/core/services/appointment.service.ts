@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../config/api.config';
 import {
   Appointment,
   BookAppointmentRequest,
+  RescheduleAppointmentRequest,
   UpdateAppointmentStatusRequest
 } from '../models/appointment.models';
 import { PagedResponse } from '../models/shared.models';
@@ -48,5 +49,12 @@ export class AppointmentService {
     payload: UpdateAppointmentStatusRequest
   ): Observable<Appointment> {
     return this.http.put<Appointment>(`${API_BASE_URL}/appointments/${appointmentId}/status`, payload);
+  }
+
+  rescheduleAppointment(
+    appointmentId: number,
+    payload: RescheduleAppointmentRequest
+  ): Observable<Appointment> {
+    return this.http.put<Appointment>(`${API_BASE_URL}/appointments/${appointmentId}/reschedule`, payload);
   }
 }

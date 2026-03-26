@@ -9,9 +9,10 @@ This document focuses on table structure, constraints, and indexing decisions.
 
 ## Overview
 
-The Fracto database is designed in SQL Server to support authentication, doctor discovery, appointment booking, cancellation, and post-consultation ratings. The schema uses five core tables:
+The Fracto database is designed in SQL Server to support authentication, doctor discovery, appointment booking, cancellation, and post-consultation ratings. The schema uses six core tables:
 
 - `Users`
+- `RefreshTokens`
 - `Specializations`
 - `Doctors`
 - `Appointments`
@@ -24,12 +25,14 @@ The structure keeps the domain normalized while still supporting efficient searc
 ```mermaid
 flowchart LR
     U["Users<br/>identity and roles"]
+    RT["RefreshTokens<br/>session renewal"]
     S["Specializations<br/>reference data"]
     D["Doctors<br/>directory and schedule"]
     A["Appointments<br/>booking transactions"]
     R["Ratings<br/>post-visit feedback"]
 
     S --> D
+    U --> RT
     U --> A
     D --> A
     A --> R
@@ -37,11 +40,13 @@ flowchart LR
     D --> R
 
     I1["Unique email index"]
+    I5["Refresh token hash index"]
     I2["Doctor search index<br/>(City, SpecializationId, AverageRating)"]
     I3["Active slot unique index<br/>(DoctorId, AppointmentDate, TimeSlot)"]
     I4["Unique appointment rating index"]
 
     U -. login lookup .-> I1
+    RT -. refresh lookup .-> I5
     D -. filtered search .-> I2
     A -. double-booking prevention .-> I3
     R -. one review per visit .-> I4
@@ -78,7 +83,30 @@ Indexes:
 - Unique index on `Email`
 - Nonclustered index on `Role`
 
-### 2. Specializations
+### 2. RefreshTokens
+
+Purpose: stores hashed refresh tokens for secure session renewal.
+
+Key columns:
+
+- `RefreshTokenId` `INT IDENTITY` primary key
+- `UserId` `INT` not null foreign key
+- `TokenHash` `CHAR(64)` not null unique
+- `ExpiresAtUtc` `DATETIME2` not null
+- `CreatedAtUtc` `DATETIME2` default `SYSUTCDATETIME()`
+- `RevokedAtUtc` `DATETIME2` nullable
+- `ReplacedByTokenHash` `CHAR(64)` nullable
+
+Constraints:
+
+- Foreign key to `Users`
+
+Indexes:
+
+- Unique index on `TokenHash`
+- Nonclustered index on `UserId`
+
+### 3. Specializations
 
 Purpose: stores reference data for doctor specialties.
 
@@ -97,7 +125,7 @@ Indexes:
 
 - Unique index on `SpecializationName`
 
-### 3. Doctors
+### 4. Doctors
 
 Purpose: stores doctor profiles, working window, and search-related data.
 
@@ -132,7 +160,7 @@ Indexes:
 - Nonclustered index on `SpecializationId`
 - Composite index on `(City, SpecializationId, AverageRating)`
 
-### 4. Appointments
+### 5. Appointments
 
 Purpose: stores booking transactions between users and doctors.
 
@@ -161,7 +189,7 @@ Indexes:
 - Composite index on `(DoctorId, AppointmentDate)`
 - Filtered unique index on `(DoctorId, AppointmentDate, TimeSlot)` for non-cancelled appointments
 
-### 5. Ratings
+### 6. Ratings
 
 Purpose: stores post-consultation feedback.
 

@@ -13,7 +13,7 @@ describe('AuthService', () => {
   const sessionResponse: AuthResponse = {
     message: 'Login successful',
     token: 'sample-token',
-    expiresAtUtc: '2026-03-20T10:30:00Z',
+    expiresAtUtc: '2099-03-20T10:30:00Z',
     user: {
       userId: 42,
       fullName: 'Rhea Thomas',
@@ -77,7 +77,13 @@ describe('AuthService', () => {
     localStorage.setItem(storageKey, JSON.stringify(sessionResponse));
 
     const service = TestBed.inject(AuthService);
+    const httpTesting = TestBed.inject(HttpTestingController);
+
     service.logout();
+
+    const request = httpTesting.expectOne(`${API_BASE_URL}/auth/logout`);
+    expect(request.request.method).toBe('POST');
+    request.flush({});
 
     expect(service.isAuthenticated()).toBeFalse();
     expect(service.currentUser()).toBeNull();

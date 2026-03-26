@@ -32,6 +32,49 @@ public sealed class UsersController(IUserService userAccountService) : Controlle
     }
 
     /// <summary>
+    /// Retrieves a specific user by ID.
+    /// </summary>
+    [HttpGet("{uId:int}")]
+    public async Task<ActionResult<UserDetailDto>> GetUserById(int uId, CancellationToken token)
+    {
+        var user = await userAccountService.GetUserByIdAsync(uId, token);
+        return Ok(user);
+    }
+
+    /// <summary>
+    /// Creates a new user account (admin only).
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<UserDetailDto>> CreateUser([FromBody] UserCreateDto request, CancellationToken token)
+    {
+        var created = await userAccountService.CreateUserAsync(request, token);
+        return CreatedAtAction(nameof(GetUserById), new { uId = created.UserId }, created);
+    }
+
+    /// <summary>
+    /// Updates an existing user account (admin only).
+    /// </summary>
+    [HttpPut("{uId:int}")]
+    public async Task<ActionResult<UserDetailDto>> UpdateUser(
+        int uId,
+        [FromBody] UserUpdateDto request,
+        CancellationToken token)
+    {
+        var updated = await userAccountService.UpdateUserAsync(uId, request, token);
+        return Ok(updated);
+    }
+
+    /// <summary>
+    /// Deactivates a user account (admin only).
+    /// </summary>
+    [HttpDelete("{uId:int}")]
+    public async Task<ActionResult<object>> DeleteUser(int uId, CancellationToken token)
+    {
+        await userAccountService.DeleteUserAsync(uId, token);
+        return Ok(new { message = "User account has been deactivated." });
+    }
+
+    /// <summary>
     /// Toggles the active/inactive status of a specific user account.
     /// </summary>
     /// <param name="uId">The unique ID of the user.</param>
