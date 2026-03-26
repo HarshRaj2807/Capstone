@@ -171,6 +171,7 @@ This project includes security best practices for managing sensitive configurati
 For detailed security configuration instructions, see [SECURITY.md](./SECURITY.md).
 
 **Quick Start for Development:**
+
 ```bash
 cd backend/Fracto.Api
 dotnet user-secrets init
@@ -178,6 +179,7 @@ dotnet user-secrets set "Jwt:Key" "YourSecureKeyThatIsAtLeast32CharactersLongFor
 ```
 
 **Production Deployment:**
+
 - Set required environment variables (see SECURITY.md)
 - Use `appsettings.Production.json` as a template
 - Enable HTTPS and restrict CORS to your domain

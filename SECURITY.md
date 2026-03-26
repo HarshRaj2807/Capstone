@@ -95,12 +95,14 @@ ASPNETCORE_URLS=https://+:443
 ### Generate a Secure JWT Secret
 
 Using PowerShell:
+
 ```powershell
 # Generate a 32-character base64 string
 [System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes((New-Guid).ToString() + (New-Guid).ToString())) | Select-Object -First 1
 ```
 
 Using Bash:
+
 ```bash
 # Generate a 32-character base64 string
 openssl rand -base64 32
@@ -111,21 +113,25 @@ Or use any secure random string generator with at least 32 characters.
 ## Configuration Files
 
 ### appsettings.json
+
 - Contains default/demo settings
 - Tracked in git for reference
 - **Never commit real secrets here**
 
 ### appsettings.Development.json
+
 - Gitignored - use for local development
 - Contains your local development configuration
 - Each developer maintains their own copy
 
 ### appsettings.Production.json
+
 - Template for production environment variables
 - Uses `${ENV_VAR}` syntax for environment variable interpolation
 - Deployed to production with environment variables
 
 ### appsettings.example.json
+
 - Template reference for configuration structure
 - Shows how to configure both SQLite and SQL Server
 - Safe to commit to version control
@@ -143,13 +149,16 @@ Or use any secure random string generator with at least 32 characters.
 ## Testing with Different Configurations
 
 ### Test with SQLite
+
 ```bash
 export ASPNETCORE_ENVIRONMENT=Development
 dotnet run
 ```
 
 ### Test with SQL Server
+
 Update `appsettings.Development.json`:
+
 ```json
 {
   "DatabaseProvider": "SqlServer"
@@ -157,6 +166,7 @@ Update `appsettings.Development.json`:
 ```
 
 Then run:
+
 ```bash
 dotnet run
 ```
@@ -164,14 +174,17 @@ dotnet run
 ## Troubleshooting
 
 ### JWT Key Error
+
 **Error**: "JWT settings are missing from configuration"
 **Solution**: Ensure `Jwt:Key` is set in either appsettings or user secrets
 
 ### Database Connection Error
+
 **Error**: "The connection string is missing"
 **Solution**: Check your database provider setting and connection string configuration
 
 ### CORS Issues in Production
+
 **Solution**: Update `Cors:AllowedOrigins` in appsettings to include your production domain
 
 ## References

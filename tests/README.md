@@ -4,7 +4,7 @@ This directory contains comprehensive test coverage for the Fracto API backend.
 
 ## Project Structure
 
-```
+```text
 Fracto.Api.Tests/
   Infrastructure/
     SqliteTestDbContextFactory.cs    Factory for in-memory SQLite test database
@@ -145,15 +145,18 @@ Tests are meant to be run in CI/CD pipelines before deployment. Ensure:
 ## Troubleshooting
 
 ### Tests Timeout
+
 - Check for infinite loops or blocking calls
 - Increase timeout in test configuration if needed
 - Verify async operations complete properly
 
 ### Database Lock Errors
+
 - Ensure proper disposal of `DbContext` using `using` or `await using`
 - Check that tests aren't sharing database instances
 
 ### Entity Not Tracked
+
 - Verify entities are added to DbContext before querying
 - Ensure `SaveChangesAsync()` is called after modifications
 
