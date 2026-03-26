@@ -7,6 +7,8 @@ using Fracto.Api.Tests.Infrastructure;
 namespace Fracto.Api.Tests.Services;
 
 using ApiConflictException = Fracto.Api.Helpers.ConflictException;
+using ApiForbiddenException = Fracto.Api.Helpers.ForbiddenException;
+using ApiValidationException = Fracto.Api.Helpers.ValidationException;
 
 public sealed class AppointmentServiceTests
 {
@@ -115,6 +117,130 @@ public sealed class AppointmentServiceTests
 
         Assert.Equal(appointmentDate.AddDays(1).ToString("yyyy-MM-dd"), updated.AppointmentDate);
         Assert.Equal("09:30", updated.TimeSlot);
+    }
+
+    [Fact]
+    public async Task BookAppointmentAsync_ThrowsWhenSlotOutsideHours()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        var appointmentDate = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+
+        await using (var seedContext = await dbFactory.CreateDbContextAsync())
+        {
+            var specialization = new Specialization { SpecializationName = "Oncologist" };
+            var user = CreateUser("user4@example.com");
+            seedContext.Specializations.Add(specialization);
+            seedContext.Users.Add(user);
+            await seedContext.SaveChangesAsync();
+
+            var doctor = CreateDoctor("Dr. Varun Rao", specialization.SpecializationId);
+            doctor.ConsultationStartTime = new TimeOnly(9, 0);
+            doctor.ConsultationEndTime = new TimeOnly(12, 0);
+            doctor.SlotDurationMinutes = 30;
+
+            seedContext.Doctors.Add(doctor);
+            await seedContext.SaveChangesAsync();
+        }
+
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+        var service = new AppointmentService(dbContext);
+        var doctorId = dbContext.Doctors.Select(d => d.DoctorId).First();
+        var userId = dbContext.Users.Select(u => u.UserId).First();
+
+        var exception = await Assert.ThrowsAsync<ApiValidationException>(() =>
+            service.BookAppointmentAsync(userId, new BookAppointmentRequestDto
+            {
+                DoctorId = doctorId,
+                AppointmentDate = appointmentDate,
+                TimeSlot = "13:00",
+                ReasonForVisit = "Checkup"
+            }));
+
+        Assert.Equal("This time slot is outside of the doctor's practicing hours.", exception.Message);
+    }
+
+    [Fact]
+    public async Task CancelAppointmentAsync_ThrowsForbidden_WhenUserDoesNotOwnAppointment()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        var appointmentDate = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+
+        await using (var seedContext = await dbFactory.CreateDbContextAsync())
+        {
+            var specialization = new Specialization { SpecializationName = "ENT" };
+            var owner = CreateUser("owner@example.com");
+            var otherUser = CreateUser("other@example.com");
+            seedContext.Specializations.Add(specialization);
+            seedContext.Users.AddRange(owner, otherUser);
+            await seedContext.SaveChangesAsync();
+
+            var doctor = CreateDoctor("Dr. Leena Shah", specialization.SpecializationId);
+            seedContext.Doctors.Add(doctor);
+            await seedContext.SaveChangesAsync();
+
+            seedContext.Appointments.Add(new Appointment
+            {
+                UserId = owner.UserId,
+                DoctorId = doctor.DoctorId,
+                AppointmentDate = appointmentDate,
+                TimeSlot = new TimeOnly(9, 0),
+                Status = AppointmentStatus.Booked
+            });
+
+            await seedContext.SaveChangesAsync();
+        }
+
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+        var service = new AppointmentService(dbContext);
+        var appointmentId = dbContext.Appointments.Select(a => a.AppointmentId).First();
+        var otherUserId = dbContext.Users.OrderBy(u => u.UserId).Select(u => u.UserId).Last();
+
+        await Assert.ThrowsAsync<ApiForbiddenException>(() =>
+            service.CancelAppointmentAsync(appointmentId, otherUserId, UserRole.User, "nope"));
+    }
+
+    [Fact]
+    public async Task UpdateAppointmentStatusAsync_SetsCancellationMetadata()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        var appointmentDate = DateOnly.FromDateTime(DateTime.Now).AddDays(1);
+
+        await using (var seedContext = await dbFactory.CreateDbContextAsync())
+        {
+            var specialization = new Specialization { SpecializationName = "General" };
+            var user = CreateUser("user5@example.com");
+            seedContext.Specializations.Add(specialization);
+            seedContext.Users.Add(user);
+            await seedContext.SaveChangesAsync();
+
+            var doctor = CreateDoctor("Dr. Sana Patel", specialization.SpecializationId);
+            seedContext.Doctors.Add(doctor);
+            await seedContext.SaveChangesAsync();
+
+            seedContext.Appointments.Add(new Appointment
+            {
+                UserId = user.UserId,
+                DoctorId = doctor.DoctorId,
+                AppointmentDate = appointmentDate,
+                TimeSlot = new TimeOnly(10, 0),
+                Status = AppointmentStatus.Booked
+            });
+
+            await seedContext.SaveChangesAsync();
+        }
+
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+        var service = new AppointmentService(dbContext);
+        var appointmentId = dbContext.Appointments.Select(a => a.AppointmentId).First();
+
+        var updated = await service.UpdateAppointmentStatusAsync(appointmentId, new UpdateAppointmentStatusDto
+        {
+            Status = "Cancelled",
+            CancellationReason = "Patient unavailable"
+        }, UserRole.Admin);
+
+        Assert.Equal("Cancelled", updated.Status);
+        Assert.Equal("Patient unavailable", updated.CancellationReason);
     }
 
     private static Doctor CreateDoctor(string fullName, int specializationId) =>

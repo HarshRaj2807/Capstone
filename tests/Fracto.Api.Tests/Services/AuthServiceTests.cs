@@ -88,6 +88,98 @@ public sealed class AuthServiceTests
         Assert.Equal("Current password is incorrect.", exception.Message);
     }
 
+    [Fact]
+    public async Task LoginAsync_ThrowsWhenCredentialsAreInvalid()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+
+        var service = CreateAuthService(dbContext);
+
+        var exception = await Assert.ThrowsAsync<ApiValidationException>(() =>
+            service.LoginAsync(new LoginRequestDto
+            {
+                Email = "missing@example.com",
+                Password = "Password@123"
+            }));
+
+        Assert.Equal("Invalid email or password.", exception.Message);
+    }
+
+    [Fact]
+    public async Task LogoutAsync_RevokesRefreshToken()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+
+        var service = CreateAuthService(dbContext);
+        var session = await service.RegisterAsync(new RegisterRequestDto
+        {
+            FirstName = "Sara",
+            LastName = "James",
+            Email = "sara@example.com",
+            Password = "Password@123"
+        });
+
+        await service.LogoutAsync(session.RefreshToken);
+
+        var token = dbContext.RefreshTokens.Single();
+        Assert.NotNull(token.RevokedAtUtc);
+    }
+
+    [Fact]
+    public async Task UpdateProfileAsync_TrimsInputAndUpdatesUser()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+
+        var service = CreateAuthService(dbContext);
+        var session = await service.RegisterAsync(new RegisterRequestDto
+        {
+            FirstName = "Liam",
+            LastName = "Austin",
+            Email = "liam@example.com",
+            Password = "Password@123",
+            PhoneNumber = "1234567",
+            City = "Pune"
+        });
+
+        var updated = await service.UpdateProfileAsync(session.Auth.User.UserId, new UpdateProfileRequestDto
+        {
+            FirstName = "  Liam ",
+            LastName = "  Austin ",
+            PhoneNumber = " 9876543210 ",
+            City = "  Pune "
+        });
+
+        Assert.Equal("Liam Austin", updated.FullName);
+        Assert.Equal("Pune", updated.City);
+    }
+
+    [Fact]
+    public async Task UploadProfileImageAsync_StoresReturnedPath()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+
+        var service = CreateAuthService(dbContext);
+        var session = await service.RegisterAsync(new RegisterRequestDto
+        {
+            FirstName = "Asha",
+            LastName = "Naidu",
+            Email = "asha@example.com",
+            Password = "Password@123"
+        });
+
+        await using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
+        var file = new FormFile(stream, 0, stream.Length, "file", "photo.png");
+
+        var path = await service.UploadProfileImageAsync(session.Auth.User.UserId, file);
+
+        Assert.Equal("/uploads/test.png", path);
+        Assert.Equal(path, dbContext.Users.Single().ProfileImagePath);
+    }
+
     private static AuthService CreateAuthService(Fracto.Api.Data.FractoDbContext dbContext)
     {
         var jwtSettings = new JwtSettings

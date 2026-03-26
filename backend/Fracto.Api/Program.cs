@@ -134,3 +134,4 @@ app.MapControllers();
 await DbInitializer.InitializeAsync(app.Services);
 
 app.Run();
+

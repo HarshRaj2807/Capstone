@@ -105,7 +105,7 @@ import { AuthService } from '../../core/services/auth.service';
               <label>
                 Confirm Password
                 <input type="password" formControlName="confirmPassword" placeholder="Re-enter password" />
-                @if (registerForm.errors?.passwordMismatch && registerForm.controls.confirmPassword.touched) {
+                @if (registerForm.errors?.['passwordMismatch'] && registerForm.controls.confirmPassword.touched) {
                   <span class="field-error">Passwords do not match.</span>
                 }
               </label>
@@ -164,7 +164,6 @@ import { AuthService } from '../../core/services/auth.service';
     .hero-panel {
       background: rgba(255, 255, 255, 0.45);
       backdrop-filter: blur(30px) saturate(180%);
-      -webkit-backdrop-filter: blur(30px) saturate(180%);
       color: #1d1d1f;
       position: relative;
       overflow: hidden;
@@ -209,7 +208,6 @@ import { AuthService } from '../../core/services/auth.service';
     .form-panel {
       background: rgba(255, 255, 255, 0.45);
       backdrop-filter: blur(30px) saturate(180%);
-      -webkit-backdrop-filter: blur(30px) saturate(180%);
       border-left: 1px solid rgba(0, 0, 0, 0.08);
     }
 
@@ -230,6 +228,7 @@ import { AuthService } from '../../core/services/auth.service';
       position: absolute;
       top: 0.35rem;
       bottom: 0.35rem;
+      left: 0.35rem;
       width: calc(50% - 0.35rem);
       background: rgba(255, 255, 255, 0.95);
       border: 1px solid rgba(0, 0, 0, 0.05);
@@ -237,6 +236,10 @@ import { AuthService } from '../../core/services/auth.service';
       transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
       z-index: 0;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    :host.register-active .panel-switcher::before {
+      transform: translateX(100%);
     }
 
     .panel-switcher button {
@@ -289,7 +292,6 @@ import { AuthService } from '../../core/services/auth.service';
       display: grid;
       gap: 1.5rem;
       animation: slideFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      transform-origin: top center;
     }
 
     /* Stagger the inner inputs to create a cascading effect */
@@ -311,7 +313,6 @@ import { AuthService } from '../../core/services/auth.service';
       color: #1d1d1f;
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
       font-weight: 600;
-      letter-spacing: -0.02em;
     }
 
     .field-error {

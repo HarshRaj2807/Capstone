@@ -14,7 +14,7 @@ export interface ConfirmationDetail {
     @if (visible()) {
       <div class="overlay" (click)="close.emit()">
         <section class="dialog" (click)="$event.stopPropagation()">
-          <button type="button" class="close-button" (click)="close.emit()">×</button>
+          <button type="button" class="close-button" (click)="close.emit()">x</button>
 
           <p class="eyebrow">Confirmation</p>
           <h2>{{ title() }}</h2>
@@ -168,3 +168,4 @@ export class ConfirmationPopupComponent {
   readonly primary = output<void>();
   readonly secondary = output<void>();
 }
+

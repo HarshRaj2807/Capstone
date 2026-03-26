@@ -168,9 +168,7 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       border-radius: 1.75rem;
       background: rgba(255, 255, 255, 0.45);
       backdrop-filter: blur(20px) saturate(180%);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
       border: 1px solid rgba(0, 0, 0, 0.08);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     }
 
     .eyebrow {
@@ -212,23 +210,12 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       font-weight: 600;
       font-size: 0.95rem;
       background: rgba(255, 255, 255, 0.6);
-      transition: background 0.2s ease, transform 0.2s ease;
-    }
-    
-    .ghost-link:hover {
-      background: rgba(255, 255, 255, 0.9);
-      transform: scale(1.02);
     }
 
     .ghost-link.accent {
       background: #1d1d1f;
       color: #fff;
       border: none;
-    }
-    
-    .ghost-link.accent:hover {
-      background: #ffffff;
-      color: #1d1d1f;
     }
 
     .feedback {
@@ -260,8 +247,6 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       border: 1px solid rgba(0, 0, 0, 0.08);
       background: rgba(255, 255, 255, 0.45);
       backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
     }
 
     .filters-card {
@@ -305,7 +290,6 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       background: rgba(255, 255, 255, 0.6);
       color: #1d1d1f;
       font: inherit;
-      transition: border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
     }
     
     input:focus,
@@ -313,7 +297,6 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       outline: none;
       border-color: rgba(0, 102, 204, 0.5);
       background: rgba(255, 255, 255, 0.9);
-      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
     }
     
     input::placeholder {
@@ -332,27 +315,17 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       padding: 0.95rem 1rem;
       cursor: pointer;
       font-weight: 600;
-      transition: transform 0.2s ease, background 0.2s ease;
     }
 
     .filter-actions button {
       background: #1d1d1f;
       color: #fff;
     }
-    
-    .filter-actions button:hover:not([disabled]) {
-      transform: scale(1.02);
-      background: #000;
-    }
 
     .filter-actions button.secondary {
       background: rgba(0, 0, 0, 0.04);
       color: #1d1d1f;
       border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-    
-    .filter-actions button.secondary:hover {
-      background: rgba(0, 0, 0, 0.08);
     }
 
     .results-grid {
@@ -377,7 +350,6 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       margin: 0;
       color: #a1a1a6;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
       font-size: 0.75rem;
       font-weight: 600;
     }
@@ -389,23 +361,15 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       color: #1d1d1f;
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
       font-weight: 600;
-      letter-spacing: -0.01em;
     }
 
     .rating-chip {
-      white-space: nowrap;
       border-radius: 999px;
       padding: 0.5rem 0.8rem;
       background: rgba(0, 0, 0, 0.04);
       border: 1px solid rgba(0, 0, 0, 0.1);
       color: #1d1d1f;
       font-weight: 600;
-      font-size: 0.85rem;
-    }
-
-    .rating-chip:hover {
-      background: rgba(0, 0, 0, 0.08);
-      transform: scale(1.05);
     }
 
     .meta-grid {
@@ -452,11 +416,6 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       border-radius: 999px;
       font-size: 0.9rem;
     }
-
-    .slots-grid button:hover:not([disabled]) {
-      background: rgba(0, 0, 0, 0.1);
-      transform: scale(1.05);
-    }
     
     .slots-grid button.booked {
       opacity: 0.5;
@@ -476,12 +435,6 @@ import { Doctor, Specialization } from '../../core/models/doctor.models';
       color: #0066cc;
       text-decoration: none;
       font-weight: 500;
-      transition: color 0.2s ease;
-    }
-
-    .reviews-link:hover {
-      color: #004499;
-      text-decoration: underline;
     }
 
     @media (max-width: 1100px) {

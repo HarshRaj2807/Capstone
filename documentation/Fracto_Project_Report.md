@@ -3,7 +3,7 @@
 ## Online Doctor Appointment Booking System
 
 **Author:** Harsh Raj  
-**Updated:** March 16, 2026  
+**Updated:** March 26, 2026  
 **Project Type:** Full-stack capstone application
 
 ## Abstract
@@ -38,19 +38,20 @@ Fracto addresses these problems by centralizing doctor discovery, slot-based sch
 
 | Actor | Main Capabilities |
 | --- | --- |
-| Patient / User | Register, log in, search doctors, select slots, confirm booking, cancel appointments, submit ratings |
+| Patient / User | Register, log in, search doctors, select slots, confirm booking, cancel or reschedule appointments, submit ratings |
 | Admin | Manage doctor records, review appointments, update statuses, activate or deactivate users |
 
 ### Delivered Application Modules
 
 | Area | Current Implementation |
 | --- | --- |
-| Authentication | Login and registration flow with JWT session handling |
+| Authentication | Login and registration flow with JWT access tokens and refresh token rotation |
 | Doctor Discovery | Search by city, specialization, rating, and appointment date |
 | Booking | Slot selection followed by a checkout-style payment page and appointment creation |
-| Appointment Management | View appointments, filter by status, cancel active bookings |
+| Appointment Management | View appointments, filter by status, cancel or reschedule bookings, submit ratings |
+| Profile Management | Update profile details, change password, and upload a profile photo |
 | Ratings | Submit feedback only for completed appointments |
-| Administration | Manage doctors, users, and appointment statuses |
+| Administration | Manage doctors, specializations, users, and appointment statuses |
 | API Testing | Swagger UI enabled for backend exploration and secure endpoint testing |
 
 ## System Architecture
@@ -93,17 +94,19 @@ The frontend is organized around route-level feature pages and service-driven AP
 | `/register` | user registration page | public |
 | `/doctors` | doctor search, filters, and slot selection | authenticated |
 | `/payment` | checkout-style booking confirmation form | authenticated |
-| `/appointments` | appointment history, cancellation, and rating | authenticated |
+| `/appointments` | appointment history, rescheduling, cancellation, and rating | authenticated |
+| `/profile` | profile details, password, and photo update | authenticated |
 | `/admin` | admin console for doctors, users, and appointments | admin only |
 
 ### Frontend Modules
 
 | Module | Responsibility |
 | --- | --- |
-| `AuthPageComponent` | login and registration experience with demo account shortcuts |
+| `AuthPageComponent` | login and registration experience with validation and session feedback |
 | `DoctorsPageComponent` | doctor search, filter application, and slot-based booking entry |
 | `PaymentPageComponent` | payment-form workflow before appointment creation |
-| `AppointmentsPageComponent` | appointment history, cancellation flow, and rating submission |
+| `AppointmentsPageComponent` | appointment history, rescheduling, cancellation flow, and rating submission |
+| `ProfilePageComponent` | profile updates, password change, and photo upload |
 | `AdminPageComponent` | consolidated admin operations across doctors, users, and appointments |
 
 ### Frontend Design Choices
@@ -150,10 +153,12 @@ sequenceDiagram
 ### Important Backend Behaviors
 
 - authentication returns a JWT plus a user summary payload
+- refresh tokens are stored server-side and rotated via the `/auth/refresh` endpoint
 - doctor search supports city, specialization, minimum rating, and appointment date filters
 - appointment booking validates date, consultation window, slot alignment, and active slot collisions
+- rescheduling revalidates the requested slot and resets status to `Booked`
 - ratings are allowed only for the appointment owner and only when the appointment is completed
-- admin-only operations include doctor management, appointment status updates, and user activation changes
+- admin-only operations include doctor management, specialization management, appointment status updates, and user activation changes
 
 ## Data Model
 
@@ -185,12 +190,12 @@ Fracto follows REST-style API design with JSON request and response bodies.
 
 | Module | Example Endpoints |
 | --- | --- |
-| Authentication | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` |
+| Authentication | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/auth/me` |
 | Doctors | `GET /api/doctors`, `GET /api/doctors/search`, `POST /api/doctors`, `PUT /api/doctors/{id}`, `DELETE /api/doctors/{id}` |
-| Appointments | `GET /api/appointments`, `POST /api/appointments/book`, `DELETE /api/appointments/{id}`, `PUT /api/appointments/{id}/status` |
+| Appointments | `GET /api/appointments`, `POST /api/appointments/book`, `DELETE /api/appointments/{id}`, `PUT /api/appointments/{id}/status`, `PUT /api/appointments/{id}/reschedule` |
 | Ratings | `POST /api/ratings`, `GET /api/doctors/{id}/ratings` |
-| Reference Data | `GET /api/specializations` |
-| Admin / Users | `GET /api/users`, user status management endpoints |
+| Reference Data | `GET /api/specializations`, `POST /api/specializations` |
+| Admin / Users | `GET /api/users`, `POST /api/users`, user status management endpoints |
 
 Detailed request and response examples are documented in [REST_API_Design.md](./REST_API_Design.md).
 
@@ -233,6 +238,7 @@ sequenceDiagram
 - passwords are hashed with BCrypt before storage
 - JWT bearer authentication protects user and admin routes
 - admin functionality is restricted through role-based authorization
+- refresh tokens are stored in HTTP-only cookies and rotated on renewal
 - malformed requests are handled through centralized exception middleware
 - CORS is explicitly configured for trusted frontend origins
 
@@ -253,13 +259,14 @@ Testing in Fracto combines automated tests with API-level validation.
 
 | Area | Current Coverage |
 | --- | --- |
-| Frontend | app shell smoke tests, auth service session tests, auth guard navigation tests |
-| Backend | service tests for doctor search, slot availability, doctor validation, doctor creation mapping, and specialization ordering |
+| Frontend | component tests for auth, profile, admin, appointments, doctors, payment, confirmation popup; guard and interceptor tests; service tests for all API clients |
+| Backend | service tests for auth, doctors, appointments, ratings, specializations, users, and file storage |
+| E2E | Playwright flow covering login, booking, and admin completion |
 
 ### Manual Verification
 
 - Swagger is enabled to test registration, login, and protected endpoints
-- the Angular UI supports full-path verification of login, doctor search, payment, booking, cancellation, and rating workflows
+- the Angular UI supports full-path verification of login, doctor search, payment, booking, cancellation, rescheduling, and rating workflows
 - admin flows can be verified with the seeded admin account
 
 ## Supporting Documentation Map
@@ -280,7 +287,7 @@ To avoid duplication, the project documentation is intentionally split by purpos
 - notifications for booking confirmations and reminders
 - calendar sync support
 - richer user profile and image upload UI
-- deeper test coverage for controllers and end-to-end scenarios
+- controller-level integration tests and CI coverage thresholds
 - mobile-friendly extension or dedicated mobile client
 
 ## Conclusion

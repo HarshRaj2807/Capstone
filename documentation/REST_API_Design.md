@@ -219,6 +219,14 @@ Success response:
 - Purpose: rotate refresh token and issue a new access token
 - Notes: relies on the HTTP-only refresh cookie; body is optional
 
+Optional request body:
+
+```json
+{
+  "refreshToken": "<refresh-token>"
+}
+```
+
 Success response:
 
 ```json
@@ -266,8 +274,8 @@ Success response:
 
 ```json
 {
-  "message": "Profile image uploaded successfully.",
-  "path": "uploads/profiles/8dd2d4e2-4ef6-49a8-a86b-4c33f1d8f10e.png"
+  "message": "Profile photo has been successfully updated.",
+  "path": "/uploads/profiles/8dd2d4e2-4ef6-49a8-a86b-4c33f1d8f10e.png"
 }
 ```
 
@@ -320,18 +328,32 @@ Request body:
 - Access: `Admin`
 - Purpose: deactivate a specialization
 
+Success response:
+
+```json
+{
+  "message": "Specialization has been deactivated."
+}
+```
+
 ## Doctor APIs
 
 ### GET /api/doctors
 
 - Access: `Public`
-- Purpose: return a paginated list of active doctors
+- Purpose: return a paginated list of active doctors (admins can include inactive records)
 
 Example request:
 
 ```text
 GET /api/doctors?pIndex=1&pSize=10
 ```
+
+Optional query parameter:
+
+| Name | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `includeInactive` | bool | no | only honored for admin callers |
 
 Success response:
 
@@ -355,6 +377,7 @@ Success response:
       "consultationEndTime": "13:00",
       "slotDurationMinutes": 30,
       "profileImagePath": null,
+      "isActive": true,
       "availableSlots": []
     }
   ]
@@ -405,10 +428,11 @@ Success response:
       "consultationEndTime": "13:00",
       "slotDurationMinutes": 30,
       "profileImagePath": null,
+      "isActive": true,
       "availableSlots": [
-        "09:00",
-        "09:30",
-        "10:00"
+        { "time": "09:00", "isAvailable": true },
+        { "time": "09:30", "isAvailable": true },
+        { "time": "10:00", "isAvailable": true }
       ]
     }
   ]
@@ -437,6 +461,7 @@ Success response:
   "consultationEndTime": "13:00",
   "slotDurationMinutes": 30,
   "profileImagePath": null,
+  "isActive": true,
   "availableSlots": []
 }
 ```
@@ -456,9 +481,9 @@ Success response:
 
 ```json
 [
-  "09:00",
-  "09:30",
-  "10:00"
+  { "time": "09:00", "isAvailable": true },
+  { "time": "09:30", "isAvailable": true },
+  { "time": "10:00", "isAvailable": true }
 ]
 ```
 
@@ -525,6 +550,7 @@ Success response:
   "consultationEndTime": "13:00",
   "slotDurationMinutes": 30,
   "profileImagePath": "/uploads/doctors/priya-nair.png",
+  "isActive": true,
   "availableSlots": []
 }
 ```
@@ -568,6 +594,7 @@ Success response:
   "consultationEndTime": "14:00",
   "slotDurationMinutes": 30,
   "profileImagePath": "/uploads/doctors/priya-nair.png",
+  "isActive": true,
   "availableSlots": []
 }
 ```
@@ -581,7 +608,7 @@ Success response:
 
 ```json
 {
-  "message": "Doctor deleted successfully."
+  "message": "The doctor's record has been successfully removed."
 }
 ```
 
@@ -645,7 +672,7 @@ Success response:
 
 ```json
 {
-  "message": "Appointment booked successfully.",
+  "message": "Your medical appointment has been successfully scheduled.",
   "appointment": {
     "appointmentId": 101,
     "userId": 2,
@@ -666,7 +693,7 @@ Conflict response:
 
 ```json
 {
-  "message": "Selected time slot is no longer available."
+  "message": "The chosen time slot has already been reserved by another patient."
 }
 ```
 
@@ -674,19 +701,19 @@ Conflict response:
 
 - Access: `Authenticated`
 - Purpose: cancel an appointment as the owner or as an admin
-- Optional query parameter: `reason`
+- Optional query parameter: `cancellationReason`
 
 Example request:
 
 ```text
-DELETE /api/appointments/101?reason=Schedule%20changed
+DELETE /api/appointments/101?cancellationReason=Schedule%20changed
 ```
 
 Success response:
 
 ```json
 {
-  "message": "Appointment cancelled successfully."
+  "message": "The selected appointment has been cancelled."
 }
 ```
 
@@ -728,12 +755,12 @@ Success response:
   "userName": "Harsh Raj",
   "doctorId": 1,
   "doctorName": "Dr. Ananya Mehta",
-  "appointmentDate": "2026-03-24",
-  "timeSlot": "09:30",
-  "status": "Completed",
-  "reasonForVisit": "Routine heart check-up",
+  "appointmentDate": "2026-03-25",
+  "timeSlot": "10:30",
+  "status": "Booked",
+  "reasonForVisit": "Follow-up consultation",
   "cancellationReason": null,
-  "canRate": true
+  "canRate": false
 }
 ```
 
@@ -759,8 +786,8 @@ Success response:
 
 ```json
 {
-  "message": "Rating submitted successfully.",
-  "rating": {
+  "message": "Your feedback has been submitted successfully.",
+  "data": {
     "ratingId": 21,
     "userName": "Harsh Raj",
     "ratingValue": 5,
@@ -821,7 +848,7 @@ Success response:
 
 ```json
 {
-  "message": "User status updated successfully."
+  "message": "The user account status has been successfully modified."
 }
 ```
 
@@ -844,6 +871,14 @@ Success response:
 
 - Access: `Admin`
 - Purpose: deactivate a user account
+
+Success response:
+
+```json
+{
+  "message": "User account has been deactivated."
+}
+```
 
 ## Common Status Codes
 

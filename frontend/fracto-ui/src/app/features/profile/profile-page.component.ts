@@ -96,7 +96,7 @@ import { AuthService } from '../../core/services/auth.service';
             <label>
               Confirm Password
               <input type="password" formControlName="confirmPassword" />
-              @if (passwordForm.errors?.passwordMismatch && passwordForm.controls.confirmPassword.touched) {
+              @if (passwordForm.errors?.['passwordMismatch'] && passwordForm.controls.confirmPassword.touched) {
                 <span class="field-error">Passwords do not match.</span>
               }
             </label>

@@ -64,4 +64,71 @@ public sealed class UserServiceTests
         Assert.Equal("Admin", updated.Role);
         Assert.False(updated.IsActive);
     }
+
+    [Fact]
+    public async Task ToggleUserStatusAsync_FlipsActiveFlag()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        await using (var seedContext = await dbFactory.CreateDbContextAsync())
+        {
+            seedContext.Users.Add(new User
+            {
+                FirstName = "Toggle",
+                LastName = "User",
+                Email = "toggle.user@example.com",
+                PasswordHash = "hash",
+                Role = UserRole.User,
+                IsActive = true
+            });
+            await seedContext.SaveChangesAsync();
+        }
+
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+        var service = new UserService(dbContext);
+        var userId = dbContext.Users.Select(user => user.UserId).Single();
+
+        await service.ToggleUserStatusAsync(userId);
+
+        var user = dbContext.Users.Single();
+        Assert.False(user.IsActive);
+    }
+
+    [Fact]
+    public async Task DeleteUserAsync_DisablesUserAndRevokesRefreshTokens()
+    {
+        await using var dbFactory = new SqliteTestDbContextFactory();
+        await using (var seedContext = await dbFactory.CreateDbContextAsync())
+        {
+            var user = new User
+            {
+                FirstName = "Delete",
+                LastName = "User",
+                Email = "delete.user@example.com",
+                PasswordHash = "hash",
+                Role = UserRole.User,
+                IsActive = true
+            };
+            seedContext.Users.Add(user);
+            await seedContext.SaveChangesAsync();
+
+            seedContext.RefreshTokens.Add(new RefreshToken
+            {
+                UserId = user.UserId,
+                TokenHash = "token",
+                ExpiresAtUtc = DateTime.UtcNow.AddDays(3),
+                CreatedAtUtc = DateTime.UtcNow
+            });
+            await seedContext.SaveChangesAsync();
+        }
+
+        await using var dbContext = await dbFactory.CreateDbContextAsync();
+        var service = new UserService(dbContext);
+        var userId = dbContext.Users.Select(user => user.UserId).Single();
+
+        await service.DeleteUserAsync(userId);
+
+        var updatedUser = dbContext.Users.Single();
+        Assert.False(updatedUser.IsActive);
+        Assert.All(dbContext.RefreshTokens.ToList(), token => Assert.NotNull(token.RevokedAtUtc));
+    }
 }

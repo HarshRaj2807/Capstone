@@ -7,6 +7,7 @@ import {
   UrlTree,
   provideRouter
 } from '@angular/router';
+import { Observable, firstValueFrom, isObservable, of } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { authGuard } from './auth.guard';
 
@@ -25,36 +26,53 @@ describe('authGuard', () => {
     return TestBed.runInInjectionContext(() => authGuard(route, state));
   }
 
-  it('allows navigation when the user is authenticated', () => {
+  async function resolveGuardResult(
+    result: boolean | UrlTree | Observable<boolean | UrlTree>
+  ) {
+    if (isObservable(result)) {
+      return firstValueFrom(result);
+    }
+    return result;
+  }
+
+  it('allows navigation when the user is authenticated', async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: 'login', component: LoginDummyComponent }]),
         {
           provide: AuthService,
           useValue: {
-            isAuthenticated: () => true
+            isAuthenticated: () => true,
+            ensureSession: () => of(true)
           }
         }
       ]
     });
 
-    expect(runGuard() as boolean).toBeTrue();
+    const result = await resolveGuardResult(
+      runGuard() as boolean | UrlTree | Observable<boolean | UrlTree>
+    );
+
+    expect(result as boolean).toBeTrue();
   });
 
-  it('redirects to /login when the user is not authenticated', () => {
+  it('redirects to /login when the user is not authenticated', async () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: 'login', component: LoginDummyComponent }]),
         {
           provide: AuthService,
           useValue: {
-            isAuthenticated: () => false
+            isAuthenticated: () => false,
+            ensureSession: () => of(false)
           }
         }
       ]
     });
 
-    const result = runGuard() as UrlTree;
+    const result = (await resolveGuardResult(
+      runGuard() as boolean | UrlTree | Observable<boolean | UrlTree>
+    )) as UrlTree;
 
     expect(result instanceof UrlTree).toBeTrue();
     expect(TestBed.inject(Router).serializeUrl(result)).toBe('/login');

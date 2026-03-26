@@ -2,7 +2,7 @@
 
 ## Overview
 
-Fracto uses JWT bearer authentication to protect user and admin API operations while keeping the frontend session flow simple. The Angular application stores the authenticated session on the client, attaches the token through an HTTP interceptor, and relies on route guards to control navigation.
+Fracto uses JWT bearer authentication to protect user and admin API operations while keeping the frontend session flow simple. The Angular application stores the authenticated session on the client, attaches the token through an HTTP interceptor, and relies on route guards to control navigation. A refresh token is issued as an HTTP-only cookie so sessions can be renewed without exposing long-lived secrets to JavaScript.
 
 ## Scope
 
@@ -49,7 +49,7 @@ The token currently includes claims based on .NET `ClaimTypes`:
 
 ### 3. Session Payload Returned to the Frontend
 
-The API returns more than just a token. It returns a complete authenticated session payload:
+The API returns an authenticated session payload (access token + user summary) and sets a refresh token cookie:
 
 ```json
 {
@@ -79,9 +79,9 @@ This allows the application to restore the session after a browser refresh.
 
 ### 4.1 Refresh Tokens (Session Renewal)
 
-In addition to the access token, the backend issues a refresh token stored in an HTTP-only cookie. The frontend uses `POST /api/auth/refresh` to rotate the refresh token and receive a new access token when the current one expires.
+In addition to the access token, the backend issues a refresh token stored in an HTTP-only cookie scoped to `/api/auth`. The frontend uses `POST /api/auth/refresh` to rotate the refresh token and receive a new access token when the current one expires. The refresh token itself is never returned in the JSON payload.
 
-This improves session handling without exposing long-lived tokens to JavaScript.
+This improves session handling without exposing long-lived tokens to JavaScript, and the server keeps hashed refresh tokens in the database for revocation and rotation tracking.
 
 ### 5. Attaching the Token to API Requests
 
@@ -145,6 +145,7 @@ sequenceDiagram
 - passwords are hashed with BCrypt before being stored
 - tokens are signed with a symmetric secret key from configuration
 - token expiry is enforced with zero clock skew
+- refresh tokens are stored in HTTP-only cookies and rotated on refresh
 - admin-only endpoints depend on role claims
 - CORS is restricted to configured frontend origins
 - centralized exception handling avoids leaking internal stack traces in API responses
