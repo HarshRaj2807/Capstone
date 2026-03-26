@@ -13,6 +13,12 @@ using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Validate configuration before building services
+var environment = builder.Environment.EnvironmentName;
+SecureConfiguration.ValidateJwtSettings(builder.Configuration);
+SecureConfiguration.ValidateDatabaseConfiguration(builder.Configuration);
+SecureConfiguration.ValidateCorsConfiguration(builder.Configuration, environment);
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {

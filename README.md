@@ -157,6 +157,31 @@ README.md
 .gitignore
 ```
 
+## Security
+
+This project includes security best practices for managing sensitive configuration:
+
+- **Secrets Management**: Sensitive data (JWT keys, database credentials) are managed via user secrets in development and environment variables in production
+- **Configuration Validation**: Startup validation ensures all required settings are properly configured
+- **CORS Security**: Production CORS is restricted to specific domains
+- **HTTPS Enforcement**: Production deployments use encrypted connections
+
+### Configuration Setup
+
+For detailed security configuration instructions, see [SECURITY.md](./SECURITY.md).
+
+**Quick Start for Development:**
+```bash
+cd backend/Fracto.Api
+dotnet user-secrets init
+dotnet user-secrets set "Jwt:Key" "YourSecureKeyThatIsAtLeast32CharactersLongForHS256"
+```
+
+**Production Deployment:**
+- Set required environment variables (see SECURITY.md)
+- Use `appsettings.Production.json` as a template
+- Enable HTTPS and restrict CORS to your domain
+
 ## Author
 
 **Harsh Raj**  

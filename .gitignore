@@ -25,7 +25,9 @@ test-results/
 .env
 .env.*
 appsettings.Development.json
+appsettings.Production.json
 appsettings.*.local.json
+secrets/
 
 # IDE
 .idea/
@@ -38,3 +40,7 @@ Desktop.ini
 
 # Test artifacts
 tests/test_output.json
+
+# Docs build artifacts
+docs/.edge-profile/
+docs/html/
